@@ -22,4 +22,14 @@
    :troll      {:label "Troll"     :ears :round   :stature 1.35 :tail false :wings false :horns false}
    :dragon-kin {:label "Dragon-kin":ears :round   :stature 1.10 :tail true  :wings true  :horns true}})
 
-(defn race [id] (get races id (:human races)))
+(defn race
+  "id → the race's body-plan map, or throws with the full list of known
+   races. Used to silently fall back to :human on an unknown id — a typo
+   (:elve for :elf) shipped a wrong-but-valid character with no signal.
+   compose-character calling this is now the enforcement point; nothing
+   else in the catalog calls race/class with a caller-supplied id."
+  [id]
+  (or (get races id)
+      (throw (ex-info (str "kami.isekai.races: unknown race " (pr-str id)
+                            " — known: " (sort (keys races)))
+                       {:race id :known (set (keys races))}))))

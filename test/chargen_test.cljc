@@ -23,7 +23,23 @@
        (seq sprite)
        (every? (fn [[kind opts]] (and (prim-kinds kind) (map? opts))) sprite)))
 
+(defn throws? [f]
+  (try (f) false (catch #?(:clj Exception :cljs :default) _ true)))
+
 (println "kami-isekai-assets gate:")
+
+(check "races/race and classes/class throw on an unknown id instead of silently falling back"
+       (and (throws? #(races/race :not-a-real-race))
+            (throws? #(classes/class :not-a-real-class))
+            (= "Human" (:label (races/race :human)))))        ;; still works for a real id
+
+(check "compose-character propagates that failure — a typo'd :race doesn't silently ship a wrong human"
+       (throws? #(chargen/compose-character {:race :elve :class :mage})))
+
+(check "the thrown ex-info's :known set matches kami.isekai.catalog's independent race/class-ids"
+       (try (races/race :nope) false
+            (catch #?(:clj Exception :cljs :default) e
+              (= (:known (ex-data e)) (catalog/race-ids)))))
 
 (check "every race composes with every class to a valid sprite"
        (every? (fn [[rid _]]

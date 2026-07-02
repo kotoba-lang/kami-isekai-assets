@@ -44,6 +44,12 @@ is never applied unless you ask for `:variant :brainrot`.
 Drop `:sprite` straight into a game's `scene.edn` under `:sprites {:my-npc
 [...]}}`, and `:render/profile` under `:render/profiles {:my-npc {...}}`.
 
+An unknown `:race`/`:class` (a typo — `:elve` for `:elf`) throws with the
+full list of valid ids, rather than silently falling back to `:human`/
+`:adventurer` and shipping a wrong-but-valid character with no signal.
+Check an id up front with `kami.isekai.catalog/known-race?` if you're
+taking `:race`/`:class` from untrusted input.
+
 Every class draws its default weapon loadout automatically (a knight gets a
 sword+shield, a mage a staff, an adventurer a dagger, a king a scepter —
 `kami.isekai.equipment/class->weapons`) — a bare-handed "knight" reads as

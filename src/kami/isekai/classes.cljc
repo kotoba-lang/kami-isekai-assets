@@ -20,4 +20,12 @@
    ;; kami.isekai.skills/:holy-heal.
    :priest       {:label "Priest"       :accessory :holy-symbol :cloak true}})
 
-(defn class [id] (get classes id (:adventurer classes)))
+(defn class
+  "id → the class's accessory map, or throws with the full list of known
+   classes. See kami.isekai.races/race — same silent-fallback footgun,
+   same fix."
+  [id]
+  (or (get classes id)
+      (throw (ex-info (str "kami.isekai.classes: unknown class " (pr-str id)
+                            " — known: " (sort (keys classes)))
+                       {:class id :known (set (keys classes))}))))

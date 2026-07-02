@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- **Fixed a silent-fallback footgun**: `races/race` and `classes/class`
+  used to default to `:human`/`:adventurer` on an unknown id instead of
+  erroring — a typo (`:elve` for `:elf`) silently shipped a wrong-but-valid
+  character with no signal. Both now throw `ex-info` with the full list of
+  known ids; `compose-character` propagates the failure. Verified no
+  internal caller relied on the fallback (only chargen called these two
+  fns, and always with a literal valid keyword) before making the change.
 - Added class `:priest` — the dedicated healer every isekai party has,
   distinct from the offensive `:mage`. Bare-handed by default (no entry in
   `equipment/class->weapons` — a priest's tool is holy magic, not a blade),
