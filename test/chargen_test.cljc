@@ -220,6 +220,31 @@
        (and (valid-sprite? (:sprite (tensei/compose-summoning-circle)))
             (valid-sprite? (:sprite (tensei/compose-summoning-circle [0.8 0.3 0.6])))))
 
+(check "the 8 rune ticks all share the same :rot/:pivot so they turn together as one ring, not drift independently
+        (visually confirmed via headless capture — this locks the *shape* of that fix in, not just presence)"
+       (let [runes (filter (fn [[_ opts]] (get-in opts [:anim :rot])) (:sprite (tensei/compose-summoning-circle)))]
+         (and (= 8 (count runes))
+              (apply = (map (fn [[_ opts]] (:anim opts)) runes)))))
+
+(check "compose-ghost floats (:bob) rather than breathes (:pulse) — the one monster with no legs is the wrong place
+        for the 'alive and breathing' effect used everywhere else"
+       (let [g (monsters/compose-ghost)
+             anim-kinds (set (mapcat (fn [[_ opts]] (keys (:anim opts))) (:sprite g)))]
+         (and (contains? anim-kinds :bob) (not (contains? anim-kinds :pulse)))))
+
+(check "the catalog now uses all 4 anim kinds the engine supports (pulse/bob/rot/sway — confirmed real via
+        public/games/gftd/goriketsu/scene.edn), not just the 2 it started with (:pivot is a companion parameter
+        of :rot, not a 5th kind, so it's excluded from this set on purpose)"
+       (let [known-kinds #{:pulse :bob :rot :sway}
+             anim-kinds-of (fn [sprite] (set (mapcat (fn [[_ opts]] (filter known-kinds (keys (:anim opts)))) sprite)))
+             everything (concat (mapcat (fn [[r _]] (mapcat (fn [[c _]] (:sprite (chargen/compose-character {:race r :class c :seed 1})))
+                                                             classes/classes))
+                                         races/races)
+                                 (:sprite (monsters/compose-ghost))
+                                 (:sprite (tensei/compose-summoning-circle))
+                                 (:sprite (structures/compose-castle)))]
+         (= known-kinds (anim-kinds-of everything))))
+
 (check "tensei/transition has a complete kami.audio recipe + kami :fx burst spec (same shape as a skills entry)"
        (and (every? #(contains? (:audio tensei/transition) %) [:wave :freq :to :dur :gain])
             (every? #(contains? (:fx tensei/transition) %) [:n :spd :grav :life :size :colors])))

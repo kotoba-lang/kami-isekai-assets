@@ -10,14 +10,19 @@
 
 (defn compose-summoning-circle
   "A ground-level magic circle — a flattened ring (drawn as an ellipse, same
-   ground-plane convention network-isekai's :ice/:mud patches use) plus two
-   concentric rings and 8 radial rune ticks. `hue` picks the glow tone
-   (ethereal blue-white default)."
+   ground-plane convention network-isekai's :ice/:mud patches use), two
+   static concentric rings, and 8 radial rune ticks that share one :rot
+   (pivoted at the circle's own centre) so the whole rune ring turns as one
+   unit — a static magic circle reads as a diagram, not a spell in progress;
+   this is the one place in the catalog a slow continuous :rot (not
+   goriketsu's back-and-forth arm-swing usage) is the right call. `hue`
+   picks the glow tone (ethereal blue-white default)."
   ([] (compose-summoning-circle [0.55 0.70 0.95]))
   ([hue]
    (let [glow  (conj (pal/watercolor hue -0.15) 0.85)
          faint (conj (pal/watercolor hue 0.05) 0.30)
-         rune  (fn [angle] [:arc {:dx 0 :dy 0 :r 180 :a0 angle :a1 (+ angle 0.12) :w 20 :stroke glow}])]
+         spin  {:rot [6.28 0.12] :pivot [0 0]}
+         rune  (fn [angle] [:arc {:dx 0 :dy 0 :r 180 :a0 angle :a1 (+ angle 0.12) :w 20 :stroke glow :anim spin}])]
      {:sprite (into
                 [[:ellipse {:dx 0 :dy 0 :rx 220 :ry 90 :fill faint :anim {:pulse [0.06 1.2]}}]
                  [:arc {:dx 0 :dy 0 :r 200 :a0 0.0 :a1 6.28 :w 8 :stroke glow}]

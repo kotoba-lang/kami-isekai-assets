@@ -98,19 +98,27 @@
   "A standalone ethereal plan (no humanoid silhouette — it floats, no legs):
    a soft outer glow, a round translucent body, a wavy trailing hem (3
    swaying arcs), dark hollow eyes. `hue` picks the glow tone (pale
-   blue-white default)."
+   blue-white default).
+
+   The whole silhouette (glow/head/body/eyes) shares one :bob amplitude+
+   speed so it floats as a single rigid unit — :pulse (a glow/breathe
+   effect, used everywhere else in the catalog) reads as 'alive and
+   breathing', which is exactly wrong for something that floats because it
+   has no legs. The hem arcs keep their own :sway (a trailing-wisp motion
+   independent of the body's float, not a second float)."
   ([] (compose-ghost [0.75 0.85 0.95]))
   ([hue]
    (let [tone (conj (pal/watercolor hue -0.05) 0.55)
-         glow (conj (pal/watercolor hue -0.15) 0.30)]
-     {:sprite [[:circle  {:dx 0 :dy -40 :r 130 :fill glow}]
-               [:circle  {:dx 0 :dy -40 :r 100 :fill tone :anim {:pulse [0.08 1.3]}}]
-               [:ellipse {:dx 0 :dy 60 :rx 100 :ry 70 :fill tone}]
+         glow (conj (pal/watercolor hue -0.15) 0.30)
+         float {:bob [10 0.9]}]
+     {:sprite [[:circle  {:dx 0 :dy -40 :r 130 :fill glow :anim float}]
+               [:circle  {:dx 0 :dy -40 :r 100 :fill tone :anim float}]
+               [:ellipse {:dx 0 :dy 60 :rx 100 :ry 70 :fill tone :anim float}]
                [:arc {:dx -40 :dy 120 :r 40 :a0 0.5 :a1 2.6 :w 14 :stroke tone :anim {:sway [0.10 1.0]}}]
                [:arc {:dx 0   :dy 128 :r 40 :a0 0.5 :a1 2.6 :w 14 :stroke tone :anim {:sway [0.12 1.1]}}]
                [:arc {:dx 40  :dy 120 :r 40 :a0 0.5 :a1 2.6 :w 14 :stroke tone :anim {:sway [0.10 1.0]}}]
-               [:circle {:dx -26 :dy -50 :r 14 :fill [0.05 0.05 0.08]}]
-               [:circle {:dx  26 :dy -50 :r 14 :fill [0.05 0.05 0.08]}]]
+               [:circle {:dx -26 :dy -50 :r 14 :fill [0.05 0.05 0.08] :anim float}]
+               [:circle {:dx  26 :dy -50 :r 14 :fill [0.05 0.05 0.08] :anim float}]]
       :render/profile {:color tone :w 0.9 :h 1.6 :emissive 0.4}
       :tags ["ghost" "monster" "undead" "ethereal"]})))
 

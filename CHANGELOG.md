@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- **Motion variety**: the catalog had only ever used 2 of the engine's 4
+  `:anim` kinds (`:pulse`/`:sway` — confirmed `:bob`/`:rot` are real via
+  `goriketsu/scene.edn`). Fixed the two clearest mismatches:
+  `compose-ghost`'s body/head/eyes now `:bob` (float) instead of `:pulse`
+  (breathe) — a monster with no legs is the one place "alive and
+  breathing" is definitionally wrong. `compose-summoning-circle`'s 8 rune
+  ticks now share one `:rot`/`:pivot [0 0]` so the whole ring turns as a
+  unit — a static magic circle read as a diagram, not a spell in progress.
+  Verified via headless capture (3-frame time-lapse, not just `bb test`) —
+  the rune ring visibly rotates. `bb test` 38/38 (was 35/35), including a
+  check that the catalog now covers all 4 anim kinds.
 - **Closed the loop on the drift-detection audit** (3rd consecutive round
   checking for this bug class): `kami.isekai.catalog`'s `monster-ids`/
   `structure-ids` are hand-maintained sets mirroring the actual
