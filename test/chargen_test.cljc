@@ -5,7 +5,8 @@
          '[kami.isekai.monsters :as monsters]
          '[kami.isekai.skills :as skills]
          '[kami.isekai.party :as party]
-         '[kami.isekai.structures :as structures])
+         '[kami.isekai.structures :as structures]
+         '[kami.isekai.equipment :as equip])
 
 (def prim-kinds #{:circle :rect :ellipse :arc})
 
@@ -70,6 +71,21 @@
        (and (every? (comp string? name) (keys races/races))
             (every? (comp string? name) (keys classes/classes))
             (every? (comp string? name) (keys skills/skills))))
+
+(check "compose-character auto-equips the class default loadout (a knight draws a sword+shield)"
+       (let [bare  (chargen/compose-character {:race :human :class :knight :seed 9 :equip? false})
+             armed (chargen/compose-character {:race :human :class :knight :seed 9})]
+         (and (valid-sprite? (:sprite armed))
+              (> (count (:sprite armed)) (count (:sprite bare))))))
+
+(check "equip?  false opts a character out of the default loadout entirely (equal to a bare compose)"
+       (let [bare (chargen/compose-character {:race :elf :class :mage :seed 2 :equip? false})]
+         (= (:sprite bare)
+            (:sprite (chargen/compose-character {:race :elf :class :mage :seed 2 :equip? false})))))
+
+(check "kami.isekai.equipment/weapon-primitives covers every class->weapons kind with real primitives"
+       (every? (fn [kind] (valid-sprite? (vec (equip/weapon-primitives kind {}))))
+               (distinct (mapcat val equip/class->weapons))))
 
 (check "castle and guild-hall structures compose to valid sprites (default + custom hue)"
        (and (valid-sprite? (:sprite (structures/compose-castle)))

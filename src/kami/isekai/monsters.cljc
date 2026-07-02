@@ -39,7 +39,10 @@
       (update :tags conj "monster" "brute")))
 
 (defn compose-dragon [{:keys [seed] :or {seed 0}}]
-  (-> (chargen/compose-character {:race :dragon-kin :class :knight :seed seed :variant :watercolor})
+  ;; :equip? false — a dragon has claws and a breath weapon, not a knight's
+  ;; sword+shield (chargen's default loadout follows :class, which here is
+  ;; just reused for the crown+cloak silhouette, not a literal knight).
+  (-> (chargen/compose-character {:race :dragon-kin :class :knight :seed seed :variant :watercolor :equip? false})
       menacing
       (update :tags conj "monster" "boss" "dragon")))
 
@@ -52,7 +55,7 @@
   "A leaner, feral dragon-kin — no crown/cloak (bare :adventurer class), just
    the wings/tail/horns silhouette. A mid-tier flyer, not a boss."
   [{:keys [seed] :or {seed 0}}]
-  (-> (chargen/compose-character {:race :dragon-kin :class :adventurer :seed seed :variant :watercolor})
+  (-> (chargen/compose-character {:race :dragon-kin :class :adventurer :seed seed :variant :watercolor :equip? false})
       menacing
       (update :tags conj "monster" "flyer" "wyvern")))
 

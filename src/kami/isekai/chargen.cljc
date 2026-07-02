@@ -12,7 +12,8 @@
    catalog (\"view source + fork\", CodePen-for-games)."
   (:require [kami.isekai.palette :as pal]
             [kami.isekai.races :as races]
-            [kami.isekai.classes :as classes]))
+            [kami.isekai.classes :as classes]
+            [kami.isekai.equipment :as equip]))
 
 (defn- rgb->fill
   ([rgb] (vec rgb))
@@ -67,9 +68,15 @@
          sprite)))
 
 (defn compose-character
-  "{:race kw :class kw :seed int? :cheat? bool? :variant :watercolor|:brainrot}
-   → {:sprite [...primitives...] :render/profile {...} :tags [...]}."
-  [{:keys [race class seed cheat? variant] :or {seed 0 cheat? false variant :watercolor}}]
+  "{:race kw :class kw :seed int? :cheat? bool? :variant :watercolor|:brainrot
+    :equip? bool?}
+   → {:sprite [...primitives...] :render/profile {...} :tags [...]}.
+
+   :equip? (default true) appends kami.isekai.equipment/class->weapons'
+   default loadout for `class` (a knight draws a sword+shield, a mage a
+   staff, ...) — a bare-handed 'knight' reads as an unfinished sprite, not a
+   restrained one. Pass :equip? false to opt out."
+  [{:keys [race class seed cheat? variant equip?] :or {seed 0 cheat? false variant :watercolor equip? true}}]
   (let [rc        (races/race race)
         cl        (classes/class class)
         hues      (get pal/race-hues race (:human pal/race-hues))
@@ -85,8 +92,9 @@
         sprite    (-> body
                       (into (race-accent-primitives rc head-r torso-r skin accent))
                       (into (accessory-primitives cl head-r accent)))
-        sprite    (if cheat? (cheat-aura sprite) sprite)]
-    {:sprite sprite
-     :render/profile {:color (tone (:garment hues)) :w (* 0.8 stature) :h (* 1.7 stature)
-                       :emissive (if cheat? 0.5 0.15)}
-     :tags (cond-> [(name race) (name class)] cheat? (conj "cheat" "op-protagonist"))}))
+        sprite    (if cheat? (cheat-aura sprite) sprite)
+        base      {:sprite sprite
+                    :render/profile {:color (tone (:garment hues)) :w (* 0.8 stature) :h (* 1.7 stature)
+                                      :emissive (if cheat? 0.5 0.15)}
+                    :tags (cond-> [(name race) (name class)] cheat? (conj "cheat" "op-protagonist"))}]
+    (if equip? (equip/equip-for-class base class) base)))

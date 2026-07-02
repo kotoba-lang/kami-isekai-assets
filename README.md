@@ -36,13 +36,19 @@ is never applied unless you ask for `:variant :brainrot`.
 (require '[kami.isekai.chargen :as chargen])
 
 (chargen/compose-character {:race :elf :class :mage :seed 42})
-;; => {:sprite [[:circle {...}] [:circle {...}] [:arc {...}] ...]
+;; => {:sprite [[:circle {...}] [:circle {...}] [:arc {...}] [:rect {...}] ...]  ; incl. a staff — see below
 ;;     :render/profile {:color [...] :w 0.8 :h 1.7 :emissive 0.15}
 ;;     :tags ["elf" "mage"]}
 ```
 
 Drop `:sprite` straight into a game's `scene.edn` under `:sprites {:my-npc
 [...]}}`, and `:render/profile` under `:render/profiles {:my-npc {...}}`.
+
+Every class draws its default weapon loadout automatically (a knight gets a
+sword+shield, a mage a staff, an adventurer a dagger, a king a scepter —
+`kami.isekai.equipment/class->weapons`) — a bare-handed "knight" reads as
+unfinished, not restrained. Pass `:equip? false` to opt out, or call
+`kami.isekai.equipment/equip` yourself for a custom loadout.
 
 ```clojure
 (require '[kami.isekai.monsters :as monsters])
@@ -80,6 +86,10 @@ Drop `:sprite` straight into a game's `scene.edn` under `:sprites {:my-npc
   characters: `compose-castle` (keep + flanking turrets + banner) and
   `compose-guild-hall` (the adventurer's-guild storefront), both taking an
   optional palette-hue override.
+- **Equipment** (`kami.isekai.equipment`) — weapon/held-item silhouettes
+  (sword, dagger, staff, bow, shield, scepter); `equip`/`equip-for-class`
+  compose one or more onto any character's `:sprite`. `compose-character`
+  applies the class default loadout automatically.
 
 `bb gen-presets --out <dir>` writes a curated slice of the race×class /
 monster catalog as standalone `character.edn` files — see

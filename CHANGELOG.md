@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Added `kami.isekai.equipment` — weapon/held-item silhouettes (sword,
+  dagger, staff, bow, shield, scepter). `compose-character` now applies
+  each class's default loadout automatically (knight → sword+shield, mage →
+  staff, adventurer → dagger, king → scepter; `:equip? false` opts out) —
+  bare-handed characters read as unfinished, this was the biggest visible
+  maturity gap in the v1 catalog. Monster composers that reuse a humanoid
+  class for the silhouette but don't literally fit the loadout (dragon,
+  wyvern) explicitly opt out.
 - Added `kami.isekai.structures` — `compose-castle` (keep + flanking turrets
   + banner) and `compose-guild-hall` (adventurer's-guild storefront), the
   world-decoration props (お城/ギルド) that weren't covered by chargen's
