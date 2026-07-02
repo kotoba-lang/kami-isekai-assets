@@ -9,7 +9,8 @@
          '[kami.isekai.equipment :as equip]
          '[kami.isekai.status :as status]
          '[kami.isekai.tensei :as tensei]
-         '[kami.isekai.catalog :as catalog])
+         '[kami.isekai.catalog :as catalog]
+         '[kami.isekai.palette :as pal])
 
 (def prim-kinds #{:circle :rect :ellipse :arc})
 
@@ -141,6 +142,16 @@
        (every? (fn [kind] (valid-sprite? (vec (equip/weapon-primitives kind {}))))
                (distinct (mapcat val equip/class->weapons))))
 
+(check "equipment/class->weapons has an explicit entry for every catalog class id (same drift class as status.cljc — an
+        omitted key and an explicit [] both no-op identically, so 'forgotten' and 'intentionally bare' are
+        indistinguishable without this)"
+       (= (catalog/class-ids) (set (keys equip/class->weapons))))
+
+(check "palette/race-hues and class-hues have an entry for every catalog race/class id (currently complete — locking
+        it in as a test so the next new race/class can't silently ship colourless)"
+       (and (= (catalog/race-ids) (set (keys pal/race-hues)))
+            (= (catalog/class-ids) (set (keys pal/class-hues)))))
+
 (check "compute-stats is deterministic and every race/class combo produces positive stats"
        (every? (fn [[rid _]]
                  (every? (fn [[cid _]]
@@ -160,6 +171,23 @@
              cheat (status/compute-stats {:race :human :class :adventurer :cheat? true})]
          (and (:cheat? cheat) (not (:cheat? plain))
               (every? (fn [k] (>= (get cheat k) (* 7 (get plain k)))) [:hp :mp :atk :def :spd :luk]))))
+
+(check "status/race-modifiers and class-modifiers have an entry for every catalog race/class id (the drift bug: a
+        'positive stats' check alone can't catch a KNOWN id silently missing its modifiers — an absent entry
+        defaults to {} same as an empty-but-present one, so this checks key presence directly)"
+       (and (= (catalog/race-ids) (set (keys status/race-modifiers)))
+            (= (catalog/class-ids) (set (keys status/class-modifiers)))))
+
+(check "compute-stats throws on an unknown race/class, same fix as races/race and classes/class"
+       (and (throws? #(status/compute-stats {:race :not-a-real-race :class :adventurer}))
+            (throws? #(status/compute-stats {:race :human :class :not-a-real-class}))))
+
+(check "troll and priest got real stat tuning, not just a present-but-empty modifiers entry"
+       (let [troll-stats (status/compute-stats {:race :troll :class :adventurer})
+             human-stats (status/compute-stats {:race :human :class :adventurer})
+             priest-stats (status/compute-stats {:race :human :class :priest})]
+         (and (> (:hp troll-stats) (:hp human-stats))     ;; troll is tankier
+              (> (:mp priest-stats) (:mp human-stats)))))  ;; priest is more magical
 
 (check "compose-summoning-circle composes to a valid sprite (default + custom hue)"
        (and (valid-sprite? (:sprite (tensei/compose-summoning-circle)))

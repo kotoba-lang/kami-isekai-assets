@@ -47,15 +47,21 @@
 (defmethod weapon-primitives :default [_ _] [])
 
 ;; per-class default loadout — compose-character applies this automatically
-;; unless :equip? false. :shield rides alongside :sword (both sides).
+;; unless :equip? false. :shield rides alongside :sword (both sides). Every
+;; kami.isekai.classes id has an entry here, even the bare ones — an
+;; OMITTED key and an explicit `[]` both no-op the same way (get ... [])
+;; below, but omitting one is indistinguishable from forgetting it (this
+;; already happened once in kami.isekai.status, see that file's docstring).
+;; test/chargen_test.cljc asserts this map's keys match the full class set.
 (def class->weapons
-  {:knight   [:sword :shield]
-   :mage     [:staff]
-   :adventurer [:dagger]
-   :king     [:scepter]
-   :merchant []      ;; already carries a satchel (kami.isekai.chargen accessory)
+  {:knight       [:sword :shield]
+   :mage         [:staff]
+   :adventurer   [:dagger]
+   :king         [:scepter]
+   :merchant     []  ;; already carries a satchel (kami.isekai.chargen accessory)
    :guild-master []  ;; already carries an emblem
-   :princess []})
+   :princess     []
+   :priest       []})  ;; a healer's tool is holy magic, not a blade
 
 (defn equip
   "Append one or more weapon-kind silhouettes to a composed character's

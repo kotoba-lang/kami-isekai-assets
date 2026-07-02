@@ -6,7 +6,20 @@
    alongside chargen when a game wants numbers, same as a caller already
    picks kami.isekai.skills entries independently. Rendering a status window/
    HUD from this is up to the caller (kami :hud conventions, same as the rest
-   of the catalog).")
+   of the catalog).
+
+   race-modifiers/class-modifiers are a SEPARATE map from kami.isekai.races/
+   classes (mechanical tuning vs. visual body-plan data), which means they
+   can silently drift out of sync when a new race/class is added elsewhere
+   and this file isn't updated — that already happened once (:troll and
+   :priest landed in races/classes without a matching stats entry here, so
+   they silently computed as unmodified base stats). Two separate fixes:
+   compute-stats now throws on a race/class id kami.isekai.catalog doesn't
+   know at all (a typo); test/chargen_test.cljc separately asserts
+   race-modifiers/class-modifiers have an entry for every catalog id (a
+   completeness check — the drift bug was a *known* race missing an entry,
+   which id-validation alone can't catch)."
+  (:require [kami.isekai.catalog :as catalog]))
 
 (def base-stats {:hp 100 :mp 20 :atk 10 :def 10 :spd 10 :luk 10})
 
@@ -21,6 +34,7 @@
    :goblin     {:spd 4 :hp -10}
    :kobold     {:spd 6 :hp -15}
    :beastman   {:atk 4 :spd 4}
+   :troll      {:hp 40 :atk 12 :def 14 :spd -6 :mp -15}
    :dragon-kin {:hp 30 :atk 10 :def 10 :mp 10}})
 
 (def class-modifiers
@@ -30,7 +44,8 @@
    :merchant     {:luk 10}
    :guild-master {:luk 6 :def 4}
    :king         {:hp 20 :atk 6 :def 6 :luk 10}
-   :princess     {:mp 10 :luk 14}})
+   :princess     {:mp 10 :luk 14}
+   :priest       {:mp 20 :atk -6 :def 2 :luk 6}})
 
 (defn- level-scale [level] (+ 1.0 (* 0.12 (dec level))))
 
@@ -43,8 +58,17 @@
 (defn compute-stats
   "{:race kw :class kw :level int? :cheat? bool?} → {:level :hp :mp :atk :def
    :spd :luk :cheat?}. Deterministic — no seed needed, race/class/level/cheat?
-   fully determine the block."
+   fully determine the block. Throws on an unknown :race/:class, same as
+   kami.isekai.races/race and kami.isekai.classes/class."
   [{:keys [race class level cheat?] :or {level 1 cheat? false}}]
+  (when-not (catalog/known-race? race)
+    (throw (ex-info (str "kami.isekai.status/compute-stats: unknown race " (pr-str race)
+                          " — known: " (sort (catalog/race-ids)))
+                     {:race race :known (catalog/race-ids)})))
+  (when-not (catalog/known-class? class)
+    (throw (ex-info (str "kami.isekai.status/compute-stats: unknown class " (pr-str class)
+                          " — known: " (sort (catalog/class-ids)))
+                     {:class class :known (catalog/class-ids)})))
   (let [rm    (get race-modifiers race {})
         cm    (get class-modifiers class {})
         scale (level-scale level)

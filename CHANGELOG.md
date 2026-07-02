@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+- **Fixed data drift**: `kami.isekai.status`'s `race-modifiers`/
+  `class-modifiers` are a separate map from `kami.isekai.races`/`classes`
+  (mechanical tuning vs. visual data) and had silently drifted — `:troll`
+  (added 2 rounds ago) and `:priest` (added last round) were never given
+  stat modifiers, so they silently computed as unmodified base stats. Now
+  fixed with real tuning (troll: tanky/slow; priest: high MP, low ATK) and
+  `compute-stats` throws on an unknown race/class (same fix as
+  `races/race`/`classes/class`). `kami.isekai.equipment/class->weapons` had
+  the same drift risk in reverse — `:priest` was *correctly* bare-handed by
+  omission, but an omitted key and an explicit `[]` no-op identically, so
+  "forgotten" and "intentionally bare" were indistinguishable; made the
+  entry explicit. Added completeness tests (map keys == the full catalog
+  id set) for `status`, `equipment`, and `palette` so a future new race/
+  class can't silently ship half-wired again.
 - **Fixed a silent-fallback footgun**: `races/race` and `classes/class`
   used to default to `:human`/`:adventurer` on an unknown id instead of
   erroring — a typo (`:elve` for `:elf`) silently shipped a wrong-but-valid
