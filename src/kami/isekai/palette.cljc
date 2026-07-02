@@ -34,6 +34,7 @@
    :goblin     {:skin [0.52 0.62 0.32] :accent [0.24 0.20 0.12] :garment [0.36 0.30 0.16]}
    :beastman   {:skin [0.62 0.48 0.38] :accent [0.36 0.26 0.18] :garment [0.32 0.24 0.30]}
    :kobold     {:skin [0.58 0.42 0.30] :accent [0.28 0.18 0.10] :garment [0.34 0.22 0.14]}
+   :troll      {:skin [0.42 0.52 0.36] :accent [0.24 0.28 0.18] :garment [0.30 0.26 0.20]}
    :dragon-kin {:skin [0.36 0.24 0.46] :accent [0.70 0.20 0.24] :garment [0.20 0.16 0.28]}})
 
 ;; per-class accent overlay (worn over the race garment tone) — crown gold,

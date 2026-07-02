@@ -52,10 +52,25 @@
   [#(monsters/compose-slime) #(monsters/compose-goblin-raider {:seed 1})
    #(monsters/compose-orc-brute {:seed 1}) #(monsters/compose-dragon {:seed 1})
    #(monsters/compose-kobold-scout {:seed 1}) #(monsters/compose-wyvern {:seed 1})
-   #(monsters/compose-skeleton {:seed 1}) #(monsters/compose-wolf)])
+   #(monsters/compose-skeleton {:seed 1}) #(monsters/compose-wolf)
+   #(monsters/compose-troll {:seed 1}) #(monsters/compose-ghost)
+   #(monsters/compose-slime-fire) #(monsters/compose-slime-ice) #(monsters/compose-slime-poison)])
 
 (check "every monster archetype composes to a valid sprite"
        (every? (fn [f] (valid-sprite? (:sprite (f)))) monster-composers))
+
+(check "the three elemental slime variants have distinct hues and element tags"
+       (let [fire (monsters/compose-slime-fire) ice (monsters/compose-slime-ice) poison (monsters/compose-slime-poison)]
+         (and (some #{"fire"} (:tags fire)) (some #{"ice"} (:tags ice)) (some #{"poison"} (:tags poison))
+              (distinct? (:sprite fire) (:sprite ice) (:sprite poison)))))
+
+(check "compose-troll is bare-handed (no equipment) and larger than a human (stature-scaled torso radius)"
+       (let [troll (monsters/compose-troll {:seed 1})
+             human (chargen/compose-character {:race :human :class :adventurer :seed 1 :equip? false})
+             troll-torso-r (get-in (first (:sprite troll)) [1 :r])
+             human-torso-r (get-in (first (:sprite human)) [1 :r])]
+         (and (some #{"troll"} (:tags troll))
+              (> troll-torso-r human-torso-r))))
 
 (check "compose-skeleton recolours to bone/glow, not the menacing red used elsewhere"
        (let [sk (monsters/compose-skeleton {:seed 1})

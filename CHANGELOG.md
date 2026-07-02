@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- Monster variety, now that every named keyword from the original request
+  has landed something (shifting from "close a gap" to "add depth"):
+  - Added race `:troll` (large, stature 1.35) and `compose-troll` (bare-
+    handed brute, reuses the humanoid plan like goblin/orc/skeleton).
+  - Added `compose-ghost` — a new standalone ethereal plan (soft glow,
+    translucent body, wavy trailing hem, no legs), the archetypal dungeon
+    floater alongside slime/wolf's standalone plans.
+  - Added named elemental slime variants: `compose-slime-fire`,
+    `compose-slime-ice`, `compose-slime-poison` (every isekai slime dungeon
+    has a colour per floor).
+  - Coverage: 10 races × 7 classes, 13 monsters (was 9×7, 8).
 - Added `kami.isekai.tensei` — the genre's namesake moment (異世界転生, the
   one original-request keyword that had zero representation through 4
   rounds of coverage work). `compose-summoning-circle` (ground prop,

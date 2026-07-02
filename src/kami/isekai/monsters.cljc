@@ -1,8 +1,8 @@
 (ns kami.isekai.monsters
   "Monster/enemy archetypes — reuses kami.isekai.chargen's humanoid body plan
-   for goblin/orc/dragon (recoloured menacing: less watercolor wash, hotter
-   eye accent) and adds a standalone :slime blob plan, since a slime has no
-   humanoid silhouette to compose onto."
+   for goblin/orc/troll/dragon (recoloured menacing: less watercolor wash,
+   hotter eye accent) and adds standalone plans (:slime, :wolf, :ghost) for
+   monsters with no humanoid silhouette to compose onto."
   (:require [kami.isekai.chargen :as chargen]
             [kami.isekai.palette :as pal]))
 
@@ -23,6 +23,12 @@
                [:circle  {:dx    (* r 0.28)  :dy (- (* r 0.05)) :r (* r 0.10) :fill [0.08 0.08 0.10]}]]
       :render/profile {:color hue :w 1.0 :h 0.7 :emissive 0.25}
       :tags ["slime" "monster"]})))
+
+;; named elemental variants — every isekai has a slime dungeon with a colour
+;; per floor. Same compose-slime plan, a fixed hue + an element tag.
+(defn compose-slime-fire   [] (update (compose-slime [0.85 0.30 0.18]) :tags conj "fire" "elemental"))
+(defn compose-slime-ice    [] (update (compose-slime [0.35 0.65 0.90]) :tags conj "ice" "elemental"))
+(defn compose-slime-poison [] (update (compose-slime [0.55 0.30 0.75]) :tags conj "poison" "elemental"))
 
 (defn- menacing [base]
   (assoc base :sprite
@@ -79,6 +85,34 @@
   (-> (chargen/compose-character {:race :human :class :adventurer :seed seed :variant :watercolor})
       undead
       (update :tags conj "monster" "undead" "skeleton")))
+
+(defn compose-troll [{:keys [seed] :or {seed 0}}]
+  ;; :equip? false — a troll swings its fists, not a knight's dagger; the
+  ;; :adventurer class here is just reused for the bare (no accessory)
+  ;; silhouette, same reasoning as compose-skeleton.
+  (-> (chargen/compose-character {:race :troll :class :adventurer :seed seed :variant :watercolor :equip? false})
+      menacing
+      (update :tags conj "monster" "brute" "regenerating")))
+
+(defn compose-ghost
+  "A standalone ethereal plan (no humanoid silhouette — it floats, no legs):
+   a soft outer glow, a round translucent body, a wavy trailing hem (3
+   swaying arcs), dark hollow eyes. `hue` picks the glow tone (pale
+   blue-white default)."
+  ([] (compose-ghost [0.75 0.85 0.95]))
+  ([hue]
+   (let [tone (conj (pal/watercolor hue -0.05) 0.55)
+         glow (conj (pal/watercolor hue -0.15) 0.30)]
+     {:sprite [[:circle  {:dx 0 :dy -40 :r 130 :fill glow}]
+               [:circle  {:dx 0 :dy -40 :r 100 :fill tone :anim {:pulse [0.08 1.3]}}]
+               [:ellipse {:dx 0 :dy 60 :rx 100 :ry 70 :fill tone}]
+               [:arc {:dx -40 :dy 120 :r 40 :a0 0.5 :a1 2.6 :w 14 :stroke tone :anim {:sway [0.10 1.0]}}]
+               [:arc {:dx 0   :dy 128 :r 40 :a0 0.5 :a1 2.6 :w 14 :stroke tone :anim {:sway [0.12 1.1]}}]
+               [:arc {:dx 40  :dy 120 :r 40 :a0 0.5 :a1 2.6 :w 14 :stroke tone :anim {:sway [0.10 1.0]}}]
+               [:circle {:dx -26 :dy -50 :r 14 :fill [0.05 0.05 0.08]}]
+               [:circle {:dx  26 :dy -50 :r 14 :fill [0.05 0.05 0.08]}]]
+      :render/profile {:color tone :w 0.9 :h 1.6 :emissive 0.4}
+      :tags ["ghost" "monster" "undead" "ethereal"]})))
 
 (defn compose-wolf
   "A standalone quadruped plan (no humanoid silhouette to compose onto, same

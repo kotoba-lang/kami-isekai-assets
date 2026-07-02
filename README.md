@@ -53,8 +53,11 @@ unfinished, not restrained. Pass `:equip? false` to opt out, or call
 ```clojure
 (require '[kami.isekai.monsters :as monsters])
 (monsters/compose-slime)                       ; the archetypal starter monster
+(monsters/compose-slime-fire)                  ; and compose-slime-ice / compose-slime-poison
 (monsters/compose-dragon {:seed 3})            ; boss-tier, menacing recolour
 (monsters/compose-skeleton {:seed 1})          ; undead dungeon-tier, bone/glow recolour
+(monsters/compose-troll {:seed 1})             ; large, bare-handed brute
+(monsters/compose-ghost)                       ; standalone ethereal plan, floats
 (monsters/compose-wolf)                        ; standalone quadruped plan (pack monster)
 
 (require '[kami.isekai.skills :as skills])
@@ -76,12 +79,14 @@ tensei/transition                              ; {:audio {...} :fx {...}} — th
 ## Catalog
 
 - **Races** (`kami.isekai.races`) — human, hume (FFT-lineage flavour alias of
-  human), elf, dwarf, orc, goblin, kobold, beastman, dragon-kin.
+  human), elf, dwarf, orc, goblin, kobold, troll, beastman, dragon-kin.
 - **Classes** (`kami.isekai.classes`) — adventurer, knight, mage, merchant,
   guild-master, king, princess.
-- **Monsters** (`kami.isekai.monsters`) — slime, goblin-raider, orc-brute,
-  kobold-scout, wyvern, dragon (boss), skeleton (undead recolour), wolf
-  (standalone quadruped plan, pack monster).
+- **Monsters** (`kami.isekai.monsters`) — slime (+ fire/ice/poison elemental
+  variants), goblin-raider, orc-brute, kobold-scout, troll (bare-handed
+  brute), wyvern, dragon (boss), skeleton (undead recolour), ghost
+  (standalone ethereal plan, floats), wolf (standalone quadruped plan, pack
+  monster).
 - **Skills/magic** (`kami.isekai.skills`) — fireball, ice-lance, holy-heal,
   curse, wind-blade, earth-spike, teleport, summon, cheat-aura (the isekai
   overpowered-protagonist trope, as a composable golden halo —
