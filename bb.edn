@@ -1,0 +1,6 @@
+;; babashka tasks.
+{:paths ["src" "test" "scripts"]
+ :tasks {test {:doc  "Data gate: every race × class × monster × skill composes to valid kami.sprite2d data."
+               :task (load-file "test/chargen_test.cljc")}
+         gen-presets {:doc  "Write a curated preset pack of character/monster EDN files. --out <dir>"
+                      :task (apply load-file ["scripts/gen_presets.clj"])}}}

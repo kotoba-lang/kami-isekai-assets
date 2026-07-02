@@ -1,0 +1,6 @@
+;; kami-isekai-assets — EDN template library for isekai/tensei RPG characters,
+;; monsters, and skill effects. Pure data + pure functions, no external deps.
+;; Consumers add this via :local/root or a git dep and put `kami.isekai.*` on
+;; their classpath / shadow-cljs source path.
+{:paths ["src"]
+ :deps  {}}
