@@ -4,7 +4,8 @@
          '[kami.isekai.chargen :as chargen]
          '[kami.isekai.monsters :as monsters]
          '[kami.isekai.skills :as skills]
-         '[kami.isekai.party :as party])
+         '[kami.isekai.party :as party]
+         '[kami.isekai.structures :as structures])
 
 (def prim-kinds #{:circle :rect :ellipse :arc})
 
@@ -69,6 +70,12 @@
        (and (every? (comp string? name) (keys races/races))
             (every? (comp string? name) (keys classes/classes))
             (every? (comp string? name) (keys skills/skills))))
+
+(check "castle and guild-hall structures compose to valid sprites (default + custom hue)"
+       (and (valid-sprite? (:sprite (structures/compose-castle)))
+            (valid-sprite? (:sprite (structures/compose-castle [0.3 0.3 0.35])))
+            (valid-sprite? (:sprite (structures/compose-guild-hall)))
+            (valid-sprite? (:sprite (structures/compose-guild-hall [0.5 0.3 0.2])))))
 
 (check "compose-party positions every member with a distinct-enough offset (1..5 members, and a 6th wrap-around)"
        (every? (fn [n]

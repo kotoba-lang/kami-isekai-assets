@@ -76,6 +76,10 @@ Drop `:sprite` straight into a game's `scene.edn` under `:sprites {:my-npc
   of character specs into a classic front-line/back-line RPG formation
   (1–5 dedicated slots, wraps beyond that); `starter-party` is the
   archetypal cheat-protagonist + knight + mage + rogue starter lineup.
+- **Structures** (`kami.isekai.structures`) — world-decoration props, not
+  characters: `compose-castle` (keep + flanking turrets + banner) and
+  `compose-guild-hall` (the adventurer's-guild storefront), both taking an
+  optional palette-hue override.
 
 `bb gen-presets --out <dir>` writes a curated slice of the race×class /
 monster catalog as standalone `character.edn` files — see

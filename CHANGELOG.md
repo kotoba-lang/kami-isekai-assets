@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added `kami.isekai.structures` — `compose-castle` (keep + flanking turrets
+  + banner) and `compose-guild-hall` (adventurer's-guild storefront), the
+  world-decoration props (お城/ギルド) that weren't covered by chargen's
+  character-only composers. Same output shape ({:sprite ... :render/profile
+  ... :tags ...}), optional palette-hue override.
 - Added `kami.isekai.party` — `compose-party` arranges character specs into a
   1–5 slot front-line/back-line RPG formation; `starter-party` is the
   archetypal cheat-protagonist/knight/mage/rogue lineup.
