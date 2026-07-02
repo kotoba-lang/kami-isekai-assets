@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added `kami.isekai.tensei` — the genre's namesake moment (異世界転生, the
+  one original-request keyword that had zero representation through 4
+  rounds of coverage work). `compose-summoning-circle` (ground prop,
+  concentric rings + radial rune ticks) + `transition` (the arrival flash —
+  kami.audio + kami :fx, same shape as a skills entry).
 - Added `kami.isekai.status` — `compute-stats` derives HP/MP/ATK/DEF/SPD/LUK
   from race + class + level, deterministic. 能力/チート were represented
   visually (skills, cheat-aura) but not mechanically — a "status window"

@@ -67,6 +67,10 @@ unfinished, not restrained. Pass `:equip? false` to opt out, or call
 (status/compute-stats {:race :human :class :adventurer :level 5 :cheat? true})
 ;; => {:level 5 :hp 1184 :mp 237 :atk 118 :def 118 :spd 118 :luk 118 :cheat? true}
 ;;    the OP-protagonist trope as numbers, not just a visual aura
+
+(require '[kami.isekai.tensei :as tensei])
+(tensei/compose-summoning-circle)              ; the genre's namesake moment — a ground prop
+tensei/transition                              ; {:audio {...} :fx {...}} — the arrival flash
 ```
 
 ## Catalog
@@ -101,6 +105,10 @@ unfinished, not restrained. Pass `:equip? false` to opt out, or call
   visual) — call it explicitly when a game wants a status window.
   `:cheat? true` multiplies every stat 8× — the isekai overpowered-
   protagonist trope as numbers, not just `chargen/cheat-aura`'s halo.
+- **転生 / tensei** (`kami.isekai.tensei`) — the genre's namesake moment.
+  `compose-summoning-circle` is a static ground prop (concentric rings +
+  radial rune ticks); `transition` is the arrival flash itself
+  (`kami.audio` + `kami :fx`, same shape as a `kami.isekai.skills` entry).
 
 `bb gen-presets --out <dir>` writes a curated slice of the race×class /
 monster catalog as standalone `character.edn` files — see

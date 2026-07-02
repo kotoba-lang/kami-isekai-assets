@@ -7,7 +7,8 @@
          '[kami.isekai.party :as party]
          '[kami.isekai.structures :as structures]
          '[kami.isekai.equipment :as equip]
-         '[kami.isekai.status :as status])
+         '[kami.isekai.status :as status]
+         '[kami.isekai.tensei :as tensei])
 
 (def prim-kinds #{:circle :rect :ellipse :arc})
 
@@ -107,6 +108,14 @@
              cheat (status/compute-stats {:race :human :class :adventurer :cheat? true})]
          (and (:cheat? cheat) (not (:cheat? plain))
               (every? (fn [k] (>= (get cheat k) (* 7 (get plain k)))) [:hp :mp :atk :def :spd :luk]))))
+
+(check "compose-summoning-circle composes to a valid sprite (default + custom hue)"
+       (and (valid-sprite? (:sprite (tensei/compose-summoning-circle)))
+            (valid-sprite? (:sprite (tensei/compose-summoning-circle [0.8 0.3 0.6])))))
+
+(check "tensei/transition has a complete kami.audio recipe + kami :fx burst spec (same shape as a skills entry)"
+       (and (every? #(contains? (:audio tensei/transition) %) [:wave :freq :to :dur :gain])
+            (every? #(contains? (:fx tensei/transition) %) [:n :spd :grav :life :size :colors])))
 
 (check "castle and guild-hall structures compose to valid sprites (default + custom hue)"
        (and (valid-sprite? (:sprite (structures/compose-castle)))
