@@ -62,6 +62,11 @@ unfinished, not restrained. Pass `:equip? false` to opt out, or call
 
 (require '[kami.isekai.party :as party])
 (party/compose-party party/starter-party)      ; 4 members, each with a formation :offset [dx dy]
+
+(require '[kami.isekai.status :as status])
+(status/compute-stats {:race :human :class :adventurer :level 5 :cheat? true})
+;; => {:level 5 :hp 1184 :mp 237 :atk 118 :def 118 :spd 118 :luk 118 :cheat? true}
+;;    the OP-protagonist trope as numbers, not just a visual aura
 ```
 
 ## Catalog
@@ -90,6 +95,12 @@ unfinished, not restrained. Pass `:equip? false` to opt out, or call
   (sword, dagger, staff, bow, shield, scepter); `equip`/`equip-for-class`
   compose one or more onto any character's `:sprite`. `compose-character`
   applies the class default loadout automatically.
+- **Status/stats** (`kami.isekai.status`) — `compute-stats` derives
+  HP/MP/ATK/DEF/SPD/LUK from race + class + level, deterministically.
+  Deliberately separate from `compose-character` (mechanical data, not a
+  visual) — call it explicitly when a game wants a status window.
+  `:cheat? true` multiplies every stat 8× — the isekai overpowered-
+  protagonist trope as numbers, not just `chargen/cheat-aura`'s halo.
 
 `bb gen-presets --out <dir>` writes a curated slice of the race×class /
 monster catalog as standalone `character.edn` files — see

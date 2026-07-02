@@ -6,7 +6,8 @@
          '[kami.isekai.skills :as skills]
          '[kami.isekai.party :as party]
          '[kami.isekai.structures :as structures]
-         '[kami.isekai.equipment :as equip])
+         '[kami.isekai.equipment :as equip]
+         '[kami.isekai.status :as status])
 
 (def prim-kinds #{:circle :rect :ellipse :arc})
 
@@ -86,6 +87,26 @@
 (check "kami.isekai.equipment/weapon-primitives covers every class->weapons kind with real primitives"
        (every? (fn [kind] (valid-sprite? (vec (equip/weapon-primitives kind {}))))
                (distinct (mapcat val equip/class->weapons))))
+
+(check "compute-stats is deterministic and every race/class combo produces positive stats"
+       (every? (fn [[rid _]]
+                 (every? (fn [[cid _]]
+                           (let [s (status/compute-stats {:race rid :class cid})]
+                             (and (every? pos? [(:hp s) (:mp s) (:atk s) (:def s) (:spd s) (:luk s)])
+                                  (= s (status/compute-stats {:race rid :class cid})))))
+                         classes/classes))
+               races/races))
+
+(check "level scaling raises every stat (level 10 > level 1, same race/class)"
+       (let [lo (status/compute-stats {:race :human :class :knight :level 1})
+             hi (status/compute-stats {:race :human :class :knight :level 10})]
+         (every? (fn [k] (> (get hi k) (get lo k))) [:hp :mp :atk :def :spd :luk])))
+
+(check "cheat? multiplies every stat by cheat-multiplier — the isekai OP-protagonist trope as numbers, not just a visual aura"
+       (let [plain (status/compute-stats {:race :human :class :adventurer})
+             cheat (status/compute-stats {:race :human :class :adventurer :cheat? true})]
+         (and (:cheat? cheat) (not (:cheat? plain))
+              (every? (fn [k] (>= (get cheat k) (* 7 (get plain k)))) [:hp :mp :atk :def :spd :luk]))))
 
 (check "castle and guild-hall structures compose to valid sprites (default + custom hue)"
        (and (valid-sprite? (:sprite (structures/compose-castle)))

@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Added `kami.isekai.status` — `compute-stats` derives HP/MP/ATK/DEF/SPD/LUK
+  from race + class + level, deterministic. 能力/チート were represented
+  visually (skills, cheat-aura) but not mechanically — a "status window"
+  with numbers is core to the genre. `:cheat? true` applies an 8× multiplier
+  (the OP-protagonist trope as numbers). Deliberately kept separate from
+  `compose-character` — mechanical data, not auto-merged into the visual
+  output, same as `kami.isekai.skills` is its own opt-in catalog.
 - Added `kami.isekai.equipment` — weapon/held-item silhouettes (sword,
   dagger, staff, bow, shield, scepter). `compose-character` now applies
   each class's default loadout automatically (knight → sword+shield, mage →
