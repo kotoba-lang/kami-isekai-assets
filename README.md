@@ -48,23 +48,34 @@ Drop `:sprite` straight into a game's `scene.edn` under `:sprites {:my-npc
 (require '[kami.isekai.monsters :as monsters])
 (monsters/compose-slime)                       ; the archetypal starter monster
 (monsters/compose-dragon {:seed 3})            ; boss-tier, menacing recolour
+(monsters/compose-skeleton {:seed 1})          ; undead dungeon-tier, bone/glow recolour
+(monsters/compose-wolf)                        ; standalone quadruped plan (pack monster)
 
 (require '[kami.isekai.skills :as skills])
 (skills/skill :fireball)                       ; {:audio {...kami.audio recipe...} :fx {...burst...}}
+
+(require '[kami.isekai.party :as party])
+(party/compose-party party/starter-party)      ; 4 members, each with a formation :offset [dx dy]
 ```
 
 ## Catalog
 
 - **Races** (`kami.isekai.races`) — human, hume (FFT-lineage flavour alias of
-  human), elf, dwarf, orc, goblin, beastman, dragon-kin.
+  human), elf, dwarf, orc, goblin, kobold, beastman, dragon-kin.
 - **Classes** (`kami.isekai.classes`) — adventurer, knight, mage, merchant,
   guild-master, king, princess.
 - **Monsters** (`kami.isekai.monsters`) — slime, goblin-raider, orc-brute,
-  dragon (boss).
+  kobold-scout, wyvern, dragon (boss), skeleton (undead recolour), wolf
+  (standalone quadruped plan, pack monster).
 - **Skills/magic** (`kami.isekai.skills`) — fireball, ice-lance, holy-heal,
-  curse, cheat-aura (the isekai overpowered-protagonist trope, as a
-  composable golden halo — `kami.isekai.chargen/cheat-aura`, or pass
-  `:cheat? true` to `compose-character`).
+  curse, wind-blade, earth-spike, teleport, summon, cheat-aura (the isekai
+  overpowered-protagonist trope, as a composable golden halo —
+  `kami.isekai.chargen/cheat-aura`, or pass `:cheat? true` to
+  `compose-character`).
+- **Party formation** (`kami.isekai.party`) — `compose-party` arranges a list
+  of character specs into a classic front-line/back-line RPG formation
+  (1–5 dedicated slots, wraps beyond that); `starter-party` is the
+  archetypal cheat-protagonist + knight + mage + rogue starter lineup.
 
 `bb gen-presets --out <dir>` writes a curated slice of the race×class /
 monster catalog as standalone `character.edn` files — see

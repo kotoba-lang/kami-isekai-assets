@@ -3,7 +3,8 @@
          '[kami.isekai.classes :as classes]
          '[kami.isekai.chargen :as chargen]
          '[kami.isekai.monsters :as monsters]
-         '[kami.isekai.skills :as skills])
+         '[kami.isekai.skills :as skills]
+         '[kami.isekai.party :as party])
 
 (def prim-kinds #{:circle :rect :ellipse :arc})
 
@@ -43,11 +44,20 @@
        (not= (chargen/compose-character {:race :orc :class :knight :seed 5 :variant :watercolor})
              (chargen/compose-character {:race :orc :class :knight :seed 5 :variant :brainrot})))
 
+(def monster-composers
+  [#(monsters/compose-slime) #(monsters/compose-goblin-raider {:seed 1})
+   #(monsters/compose-orc-brute {:seed 1}) #(monsters/compose-dragon {:seed 1})
+   #(monsters/compose-kobold-scout {:seed 1}) #(monsters/compose-wyvern {:seed 1})
+   #(monsters/compose-skeleton {:seed 1}) #(monsters/compose-wolf)])
+
 (check "every monster archetype composes to a valid sprite"
-       (and (valid-sprite? (:sprite (monsters/compose-slime)))
-            (valid-sprite? (:sprite (monsters/compose-goblin-raider {:seed 1})))
-            (valid-sprite? (:sprite (monsters/compose-orc-brute {:seed 1})))
-            (valid-sprite? (:sprite (monsters/compose-dragon {:seed 1})))))
+       (every? (fn [f] (valid-sprite? (:sprite (f)))) monster-composers))
+
+(check "compose-skeleton recolours to bone/glow, not the menacing red used elsewhere"
+       (let [sk (monsters/compose-skeleton {:seed 1})
+             fills (keep (fn [[_ opts]] (:fill opts)) (:sprite sk))]
+         (and (some #{"skeleton" "undead"} (:tags sk))
+              (not-any? #(= [0.90 0.16 0.12] (vec (take 3 %))) fills))))
 
 (check "every skill has a complete kami.audio recipe + kami :fx burst spec"
        (every? (fn [[_ s]]
@@ -60,6 +70,18 @@
             (every? (comp string? name) (keys classes/classes))
             (every? (comp string? name) (keys skills/skills))))
 
+(check "compose-party positions every member with a distinct-enough offset (1..5 members, and a 6th wrap-around)"
+       (every? (fn [n]
+                 (let [members (party/compose-party (repeat n {:race :human :class :adventurer :seed n}))]
+                   (and (= n (count members))
+                        (every? #(and (valid-sprite? (:sprite %)) (vector? (:offset %))) members))))
+               [1 2 3 4 5 6]))
+
+(check "kami.isekai.party/starter-party composes to 4 members with the cheat-flagged protagonist first"
+       (let [members (party/compose-party party/starter-party)]
+         (and (= 4 (count members))
+              (some #{"cheat"} (:tags (first members))))))
+
 (println "kami-isekai-assets gate: OK —"
          (count races/races) "races ×" (count classes/classes) "classes,"
-         4 "monsters," (count skills/skills) "skills")
+         (count monster-composers) "monsters," (count skills/skills) "skills")

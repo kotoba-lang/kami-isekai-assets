@@ -18,6 +18,7 @@
    :orc        {:label "Orc"       :ears :round   :stature 1.15 :tail false :wings false :horns false :tusked true}
    :goblin     {:label "Goblin"    :ears :long    :stature 0.68 :tail false :wings false :horns false}
    :beastman   {:label "Beastman"  :ears :round   :stature 1.05 :tail true  :wings false :horns false}
+   :kobold     {:label "Kobold"    :ears :long    :stature 0.62 :tail true  :wings false :horns false}
    :dragon-kin {:label "Dragon-kin":ears :round   :stature 1.10 :tail true  :wings true  :horns true}})
 
 (defn race [id] (get races id (:human races)))

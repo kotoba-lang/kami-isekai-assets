@@ -34,6 +34,30 @@
    {:label "Cheat Aura" :element :op :sfx-key :cheat-aura
     :audio {:wave "sine" :freq 523 :to 1046 :dur 0.5 :gain 0.18}
     :fx    {:n 26 :spd 1.6 :grav -0.02 :life 60 :size 6
-            :colors ["#ffe14a" "#ffffff" "#ffd27a"] :spark 0.6}}})
+            :colors ["#ffe14a" "#ffffff" "#ffd27a"] :spark 0.6}}
+
+   :wind-blade
+   {:label "Wind Blade" :element :wind :sfx-key :wind-blade
+    :audio {:wave "triangle" :freq 440 :to 720 :dur 0.10 :gain 0.15}
+    :fx    {:n 12 :spd 4.2 :grav 0.0 :life 18 :size 3
+            :colors ["#dff5e6" "#a8e0b8" "#ffffff"] :spark 0.35}}
+
+   :earth-spike
+   {:label "Earth Spike" :element :earth :sfx-key :earth-spike
+    :audio {:wave "square" :freq 90 :to 200 :dur 0.26 :gain 0.24}
+    :fx    {:n 16 :spd 1.8 :grav 0.16 :life 32 :size 6
+            :colors ["#8a6a3a" "#5a4022" "#c9a86a"] :spark 0.2}}
+
+   :teleport
+   {:label "Teleport" :element :arcane :sfx-key :teleport
+    :audio {:wave "sine" :freq 1200 :to 300 :dur 0.18 :gain 0.14}
+    :fx    {:n 20 :spd 2.2 :grav -0.04 :life 24 :size 4
+            :colors ["#c9a8ff" "#eaddff" "#ffffff"] :spark 0.6}}
+
+   :summon
+   {:label "Summon" :element :arcane :sfx-key :summon
+    :audio {:wave "sawtooth" :freq 100 :to 500 :dur 0.6 :gain 0.16}
+    :fx    {:n 24 :spd 1.0 :grav -0.03 :life 70 :size 6
+            :colors ["#8a4ac0" "#c9a8ff" "#1a0a2a"] :spark 0.4}}})
 
 (defn skill [id] (get skills id))
