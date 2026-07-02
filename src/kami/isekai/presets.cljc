@@ -1,0 +1,48 @@
+(ns kami.isekai.presets
+  "The single curated preset list — a representative slice across the
+   race/class/monster/structure/tensei catalog, not every combination (80
+   race×class pairs is a browsing catalog, not a starter pack). This is the
+   ONE place the list is defined: scripts/gen_presets.clj (this repo's own
+   `bb gen-presets`) and network-isekai's scripts/gen_isekai_assets.clj
+   (its Asset Hub deploy step) both consume `presets` directly instead of
+   each maintaining their own copy.
+
+   That duplication already happened once — network-isekai's copy grew a
+   new entry every round this list changed, but this namespace didn't
+   exist yet, so this file's predecessor (a list hardcoded directly in
+   scripts/gen_presets.clj) silently fell behind for a dozen rounds until
+   this refactor. A single requireable def is the actual fix, not just
+   remembering better next time."
+  (:require [kami.isekai.chargen :as chargen]
+            [kami.isekai.monsters :as monsters]
+            [kami.isekai.structures :as structures]
+            [kami.isekai.tensei :as tensei]))
+
+(def presets
+  (vec
+    (concat
+      (for [[race class] [[:elf :mage] [:dwarf :guild-master] [:orc :knight]
+                           [:human :adventurer] [:beastman :merchant]
+                           [:hume :knight] [:goblin :adventurer]
+                           [:dragon-kin :king] [:elf :princess]
+                           [:dwarf :priest]
+                           [:kobold :adventurer] [:troll :king]]]
+        {:id (str (name race) "-" (name class))
+         :compose #(chargen/compose-character {:race race :class class :seed (hash [race class])})})
+      [{:id "op-protagonist" :compose #(chargen/compose-character {:race :human :class :adventurer :seed 999 :cheat? true})}
+       {:id "slime" :compose monsters/compose-slime}
+       {:id "slime-fire" :compose monsters/compose-slime-fire}
+       {:id "slime-ice" :compose monsters/compose-slime-ice}
+       {:id "slime-poison" :compose monsters/compose-slime-poison}
+       {:id "goblin-raider" :compose #(monsters/compose-goblin-raider {:seed 1})}
+       {:id "orc-brute" :compose #(monsters/compose-orc-brute {:seed 2})}
+       {:id "dragon-boss" :compose #(monsters/compose-dragon {:seed 3})}
+       {:id "kobold-scout" :compose #(monsters/compose-kobold-scout {:seed 4})}
+       {:id "wyvern" :compose #(monsters/compose-wyvern {:seed 5})}
+       {:id "skeleton" :compose #(monsters/compose-skeleton {:seed 6})}
+       {:id "wolf" :compose monsters/compose-wolf}
+       {:id "troll" :compose #(monsters/compose-troll {:seed 7})}
+       {:id "ghost" :compose monsters/compose-ghost}
+       {:id "castle" :compose structures/compose-castle}
+       {:id "guild-hall" :compose structures/compose-guild-hall}
+       {:id "summoning-circle" :compose tensei/compose-summoning-circle}])))

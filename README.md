@@ -126,10 +126,15 @@ tensei/transition                              ; {:audio {...} :fx {...}} — th
   to validate an id before calling `compose-character`, and `summary` for
   a plain-data snapshot of the whole catalog's size.
 
-`bb gen-presets --out <dir>` writes a curated slice of the race×class /
-monster catalog as standalone `character.edn` files — see
-`scripts/gen_presets.clj`. network-isekai's default Asset Hub presets
-(`isekai.network/assets.html`) are generated this way.
+- **Presets** (`kami.isekai.presets`) — `presets`, the single curated list
+  (a representative slice, not every combination) that both `bb gen-presets`
+  and network-isekai's Asset Hub deploy script consume directly — the one
+  place this list is defined, so it can't fall out of sync with itself the
+  way it already did once (see CHANGELOG).
+
+`bb gen-presets --out <dir>` writes `kami.isekai.presets/presets` as
+standalone `character.edn` files. network-isekai's default Asset Hub
+presets (`isekai.network/assets.html`) are generated this way.
 
 ## Develop
 

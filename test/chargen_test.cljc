@@ -11,6 +11,7 @@
          '[kami.isekai.tensei :as tensei]
          '[kami.isekai.catalog :as catalog]
          '[kami.isekai.palette :as pal]
+         '[kami.isekai.presets :as presets]
          '[clojure.string :as str])
 
 (def prim-kinds #{:circle :rect :ellipse :arc})
@@ -267,6 +268,13 @@
          (and (= 4 (count members))
               (some #{"cheat"} (:tags (first members))))))
 
+(check "kami.isekai.presets/presets — the single list bb gen-presets AND network-isekai's deploy script both consume —
+        has unique ids and every entry composes to a valid sprite (this is the fix for the actual drift found this
+        round: scripts/gen_presets.clj had its own hardcoded copy that fell behind for a dozen rounds)"
+       (and (= (count presets/presets) (count (distinct (map :id presets/presets))))
+            (every? (fn [{:keys [compose]}] (valid-sprite? (:sprite (compose)))) presets/presets)))
+
 (println "kami-isekai-assets gate: OK —"
          (count races/races) "races ×" (count classes/classes) "classes,"
-         (count monster-composers) "monsters," (count skills/skills) "skills")
+         (count monster-composers) "monsters," (count skills/skills) "skills,"
+         (count presets/presets) "curated presets")

@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+- **Fixed real drift, found via a documentation audit**: the README's
+  `bb gen-presets` usage looked accurate, but `scripts/gen_presets.clj`'s
+  own hardcoded preset list was still the v1 set — missing everything
+  added across a dozen rounds since (priest, kobold/troll races, ghost/
+  wolf/elemental-slimes/wyvern/skeleton, castle/guild-hall/summoning-circle,
+  kobold-adventurer/troll-king). network-isekai's separate deploy script
+  had its own copy that I kept updating each round; this repo's own copy
+  didn't exist as something I was in the habit of touching, so it silently
+  fell behind. Root cause wasn't "forgot to update it" so much as "two
+  independent copies of the same list is structurally guaranteed to
+  drift" — fixed by extracting `kami.isekai.presets/presets` as the one
+  place the list lives, consumed directly by both `bb gen-presets` and
+  network-isekai's script (no more copies to fall out of sync). `bb test`
+  39/39 (was 38/38).
 - **Motion variety**: the catalog had only ever used 2 of the engine's 4
   `:anim` kinds (`:pulse`/`:sway` — confirmed `:bob`/`:rot` are real via
   `goriketsu/scene.edn`). Fixed the two clearest mismatches:
