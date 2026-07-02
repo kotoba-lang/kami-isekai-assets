@@ -59,7 +59,14 @@
 
 (defn seeded-jitter
   "Deterministic small hue jitter from an integer seed, so N characters of the
-   same race/class don't render identically. Pure — same seed → same jitter."
+   same race/class don't render identically. Pure — same seed → same jitter.
+
+   :seed 0 is a fixed point of this XOR-shift construction and always
+   returns 0.0 — and 0 is compose-character's default when no :seed is
+   passed. This means calling compose-character repeatedly with no :seed
+   gives every instance the exact same skin tone; pass distinct non-zero
+   seeds (kami.isekai.presets does this via (hash [race class])) to get
+   visual variety across multiple instances of the same race/class."
   [seed]
   (let [s (bit-xor seed (bit-shift-left seed 13))
         s (bit-xor s (unsigned-bit-shift-right s 17))

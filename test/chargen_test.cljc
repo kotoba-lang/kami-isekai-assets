@@ -55,8 +55,20 @@
        (= (chargen/compose-character {:race :elf :class :mage :seed 42})
           (chargen/compose-character {:race :elf :class :mage :seed 42})))
 
-(check "different seeds can jitter skin colour (not asserting always-different — jitter is small/probabilistic)"
-       (map? (chargen/compose-character {:race :human :class :adventurer :seed 1})))
+(check "different seeds actually produce different skin jitter — this used to just check (map? ...), which would
+        pass even if jitter were completely broken/a no-op. pal/seeded-jitter across 20 seeds gives 20 distinct
+        values, so 20 characters of the same race/class should show real visual variety, not identical clones."
+       (let [skins (map (fn [seed] (get-in (chargen/compose-character {:race :human :class :adventurer :seed seed})
+                                            [:sprite 1 1 :fill]))
+                         (range 1 21))]
+         (= 20 (count (distinct skins)))))
+
+(check "seed 0 (compose-character's default when :seed is omitted) is a documented fixed point of pal/seeded-jitter
+        — always 0 jitter, so repeated no-seed calls give identical skin tones. Not a bug, but worth locking in as
+        a test so a future change to the jitter formula can't silently break this documented guarantee."
+       (let [a (chargen/compose-character {:race :human :class :adventurer})   ;; no :seed → defaults to 0
+             b (chargen/compose-character {:race :human :class :adventurer :seed 0})]
+         (= (:sprite a) (:sprite b) (:sprite (chargen/compose-character {:race :human :class :adventurer})))))
 
 (check "cheat? adds a golden aura (sprite grows by the aura primitives, tags gain cheat markers)"
        (let [plain (chargen/compose-character {:race :human :class :adventurer :seed 3})

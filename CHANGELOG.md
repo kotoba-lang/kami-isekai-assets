@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+- **Replaced another proxy-assertion placeholder**, same audit instinct
+  that found last round's `brainrot` bug: "different seeds can jitter skin
+  colour" only checked `(map? (compose-character ...))`, which would pass
+  even if jitter were entirely broken. Actually verified: 20 different
+  seeds produce 20 distinct skin tones (pal/seeded-jitter works correctly
+  for non-zero seeds). Also found and documented a real, non-obvious
+  edge case while doing this: `:seed 0` — `compose-character`'s *default*
+  when no `:seed` is passed — is a fixed point of the XOR-shift jitter
+  formula and always returns exactly 0 jitter, so repeated no-seed calls
+  produce identical skin tones. Not a bug (a caller who wants variety
+  across N instances needs to pass N distinct non-zero seeds, which
+  `kami.isekai.presets` already does), but undocumented and easy to trip
+  over — now called out explicitly in `seeded-jitter`'s docstring and
+  locked in as a test. `bb test` 41/41 (was 40/40).
 - **Fixed `brainrot` producing the wrong direction of saturation for pale
   colours**: it's supposed to be the loud/saturated remix, but boosted
   each RGB channel around a fixed 0.5 midpoint — for a colour whose
