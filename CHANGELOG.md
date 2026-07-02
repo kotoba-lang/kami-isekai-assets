@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Added class `:priest` — the dedicated healer every isekai party has,
+  distinct from the offensive `:mage`. Bare-handed by default (no entry in
+  `equipment/class->weapons` — a priest's tool is holy magic, not a blade),
+  a new `:holy-symbol` accessory (chest-height pulsing cross). Pairs
+  thematically with `kami.isekai.skills/:holy-heal`.
+- Added `kami.isekai.catalog` — one-stop introspection over every race/
+  class/skill/monster/structure id (`known-race?` etc., `summary`), for a
+  character-creator UI or a script that wants to validate an id before
+  calling `compose-character` without importing every namespace.
 - Monster variety, now that every named keyword from the original request
   has landed something (shifting from "close a gap" to "add depth"):
   - Added race `:troll` (large, stature 1.35) and `compose-troll` (bare-

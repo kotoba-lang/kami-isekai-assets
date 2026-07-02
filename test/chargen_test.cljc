@@ -8,7 +8,8 @@
          '[kami.isekai.structures :as structures]
          '[kami.isekai.equipment :as equip]
          '[kami.isekai.status :as status]
-         '[kami.isekai.tensei :as tensei])
+         '[kami.isekai.tensei :as tensei]
+         '[kami.isekai.catalog :as catalog])
 
 (def prim-kinds #{:circle :rect :ellipse :arc})
 
@@ -88,6 +89,26 @@
        (and (every? (comp string? name) (keys races/races))
             (every? (comp string? name) (keys classes/classes))
             (every? (comp string? name) (keys skills/skills))))
+
+(check "priest is bare-handed by default (a healer's tool is holy magic, not a blade)"
+       (let [p (chargen/compose-character {:race :human :class :priest :seed 1})
+             bare (chargen/compose-character {:race :human :class :priest :seed 1 :equip? false})]
+         (= (:sprite p) (:sprite bare))))
+
+(check "priest's holy-symbol accessory + cloak add primitives beyond the bare humanoid base"
+       (let [bare   (chargen/compose-character {:race :human :class :adventurer :seed 1 :equip? false})
+             priest (chargen/compose-character {:race :human :class :priest :seed 1})]
+         (> (count (:sprite priest)) (count (:sprite bare)))))
+
+(check "kami.isekai.catalog validates known/unknown ids correctly, and summary counts match reality"
+       (and (catalog/known-race? :elf) (not (catalog/known-race? :not-a-real-race))
+            (catalog/known-class? :priest) (not (catalog/known-class? :not-a-real-class))
+            (catalog/known-monster? :troll) (not (catalog/known-monster? :not-a-real-monster))
+            (catalog/known-skill? :fireball) (not (catalog/known-skill? :not-a-real-skill))
+            (catalog/known-structure? :castle) (not (catalog/known-structure? :not-a-real-structure))
+            (= (:races (catalog/summary)) (count races/races))
+            (= (:classes (catalog/summary)) (count classes/classes))
+            (= (:skills (catalog/summary)) (count skills/skills))))
 
 (check "compose-character auto-equips the class default loadout (a knight draws a sword+shield)"
        (let [bare  (chargen/compose-character {:race :human :class :knight :seed 9 :equip? false})

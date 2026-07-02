@@ -46,7 +46,8 @@
    :merchant     {:accent [0.62 0.46 0.20]}
    :guild-master {:accent [0.22 0.46 0.34]}
    :king         {:accent [0.72 0.60 0.20]}
-   :princess     {:accent [0.72 0.40 0.50]}})
+   :princess     {:accent [0.72 0.40 0.50]}
+   :priest       {:accent [0.90 0.86 0.68]}})
 
 (defn seeded-jitter
   "Deterministic small hue jitter from an integer seed, so N characters of the

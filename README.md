@@ -81,7 +81,8 @@ tensei/transition                              ; {:audio {...} :fx {...}} — th
 - **Races** (`kami.isekai.races`) — human, hume (FFT-lineage flavour alias of
   human), elf, dwarf, orc, goblin, kobold, troll, beastman, dragon-kin.
 - **Classes** (`kami.isekai.classes`) — adventurer, knight, mage, merchant,
-  guild-master, king, princess.
+  guild-master, king, princess, priest (the dedicated healer — bare-handed,
+  a holy-symbol accessory, pairs with `kami.isekai.skills/:holy-heal`).
 - **Monsters** (`kami.isekai.monsters`) — slime (+ fire/ice/poison elemental
   variants), goblin-raider, orc-brute, kobold-scout, troll (bare-handed
   brute), wyvern, dragon (boss), skeleton (undead recolour), ghost
@@ -114,6 +115,10 @@ tensei/transition                              ; {:audio {...} :fx {...}} — th
   `compose-summoning-circle` is a static ground prop (concentric rings +
   radial rune ticks); `transition` is the arrival flash itself
   (`kami.audio` + `kami :fx`, same shape as a `kami.isekai.skills` entry).
+- **Catalog** (`kami.isekai.catalog`) — one-stop introspection: `race-ids`/
+  `class-ids`/`skill-ids`/`monster-ids`/`structure-ids`, `known-race?` etc.
+  to validate an id before calling `compose-character`, and `summary` for
+  a plain-data snapshot of the whole catalog's size.
 
 `bb gen-presets --out <dir>` writes a curated slice of the race×class /
 monster catalog as standalone `character.edn` files — see

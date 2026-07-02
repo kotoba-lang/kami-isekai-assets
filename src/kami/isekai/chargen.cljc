@@ -33,6 +33,10 @@
                                             :a0 3.6 :a1 5.82 :w (* head-r 0.22) :stroke accent-rgb}])
     (= accessory :satchel) (conj [:rect   {:dx (* head-r 1.1) :dy (* head-r 1.4) :w (* head-r 0.9) :h (* head-r 0.7) :fill accent-rgb}])
     (= accessory :emblem)  (conj [:circle {:dx 0 :dy (* head-r 0.2) :r (* head-r 0.4) :fill accent-rgb}])
+    (= accessory :holy-symbol) (into [[:rect {:dx 0 :dy (* head-r 0.5) :w (* head-r 0.16) :h (* head-r 0.6)
+                                               :fill accent-rgb :anim {:pulse [0.06 1.6]}}]
+                                       [:rect {:dx 0 :dy (* head-r 0.4) :w (* head-r 0.5) :h (* head-r 0.16)
+                                               :fill accent-rgb :anim {:pulse [0.06 1.6]}}]])
     cloak                  (conj [:rect   {:dx 0 :dy (* head-r 1.6) :w (* head-r 3.4) :h (* head-r 2.6) :fill accent-rgb}])))
 
 (defn- race-accent-primitives
