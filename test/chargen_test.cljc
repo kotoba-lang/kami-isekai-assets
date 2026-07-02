@@ -10,7 +10,8 @@
          '[kami.isekai.status :as status]
          '[kami.isekai.tensei :as tensei]
          '[kami.isekai.catalog :as catalog]
-         '[kami.isekai.palette :as pal])
+         '[kami.isekai.palette :as pal]
+         '[clojure.string :as str])
 
 (def prim-kinds #{:circle :rect :ellipse :arc})
 
@@ -151,6 +152,32 @@
         it in as a test so the next new race/class can't silently ship colourless)"
        (and (= (catalog/race-ids) (set (keys pal/race-hues)))
             (= (catalog/class-ids) (set (keys pal/class-hues)))))
+
+;; catalog/monster-ids and structure-ids are hand-maintained sets (not
+;; derived — .cljc portability rules out relying on ns-publics reflection
+;; at the library's own runtime), which is exactly the drift shape that bit
+;; status.cljc twice already. This test closes the loop with JVM-only
+;; reflection at *test* time (bb runs on the JVM even though the library
+;; itself must stay CLJS-portable) — if a future round adds compose-troll2
+;; and forgets to update catalog.cljc, this fails instead of silently
+;; leaving the catalog stale.
+#?(:clj
+   (defn- compose-fn-ids [ns-sym]
+     (->> (ns-publics ns-sym)
+          keys
+          (map name)
+          (filter #(str/starts-with? % "compose-"))
+          (map #(keyword (subs % 8)))
+          set)))
+
+(check "catalog/monster-ids matches every compose-* fn actually defined in kami.isekai.monsters"
+       #?(:clj (= (compose-fn-ids 'kami.isekai.monsters) catalog/monster-ids)
+          :cljs true))
+
+(check "catalog/structure-ids matches every compose-* fn actually defined across structures.cljc + tensei.cljc"
+       #?(:clj (= (into (compose-fn-ids 'kami.isekai.structures) (compose-fn-ids 'kami.isekai.tensei))
+                  catalog/structure-ids)
+          :cljs true))
 
 (check "compute-stats is deterministic and every race/class combo produces positive stats"
        (every? (fn [[rid _]]

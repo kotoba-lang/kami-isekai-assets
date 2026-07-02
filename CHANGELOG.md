@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- **Closed the loop on the drift-detection audit** (3rd consecutive round
+  checking for this bug class): `kami.isekai.catalog`'s `monster-ids`/
+  `structure-ids` are hand-maintained sets mirroring the actual
+  `compose-*` functions in `monsters`/`structures`/`tensei` — the same
+  drift shape that bit `status.cljc` twice. Added a JVM-reflection test
+  (`ns-publics`, `bb test` runs on the JVM even though the library itself
+  stays `.cljc`-portable) that compares `catalog/monster-ids` and
+  `structure-ids` against the actual defined functions. Unlike the last 2
+  rounds, this one found *no* existing drift — both sets were already
+  accurate — but it's now a permanent guard instead of a one-time manual
+  check, so a forgotten catalog entry on the next new monster fails loudly.
 - **Fixed data drift**: `kami.isekai.status`'s `race-modifiers`/
   `class-modifiers` are a separate map from `kami.isekai.races`/`classes`
   (mechanical tuning vs. visual data) and had silently drifted — `:troll`
