@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+- **Fixed `brainrot` producing the wrong direction of saturation for pale
+  colours**: it's supposed to be the loud/saturated remix, but boosted
+  each RGB channel around a fixed 0.5 midpoint — for a colour whose
+  channels are already all >0.5 (elf/troll skin, both pale), every
+  channel got pushed toward 1.0 and clamped together, actually *lowering*
+  saturation vs. plain `watercolor` for exactly those two races. Never
+  caught because the only test was `not=` (different from watercolor —
+  true, just in the wrong direction). Found by actually computing max-min
+  saturation per race instead of asserting inequality. Fixed by boosting
+  each channel around the colour's OWN mean brightness instead of a fixed
+  midpoint — verified numerically saturated for all 10 races now, not
+  just the mid-tone ones that happened to already work. `bb test` 40/40
+  (was 39/39), replacing the weak `not=` assertion with a real saturation
+  comparison.
 - **Fixed real drift, found via a documentation audit**: the README's
   `bb gen-presets` usage looked accurate, but `scripts/gen_presets.clj`'s
   own hardcoded preset list was still the v1 set — missing everything

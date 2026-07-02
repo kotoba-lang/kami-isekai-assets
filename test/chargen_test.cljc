@@ -64,9 +64,18 @@
          (and (> (count (:sprite cheat)) (count (:sprite plain)))
               (some #{"cheat"} (:tags cheat)))))
 
-(check "brainrot variant is opt-in and produces a different (louder) palette than watercolor"
+(check "brainrot variant is opt-in and produces a different palette than watercolor"
        (not= (chargen/compose-character {:race :orc :class :knight :seed 5 :variant :watercolor})
              (chargen/compose-character {:race :orc :class :knight :seed 5 :variant :brainrot})))
+
+(check "brainrot is actually MORE saturated than watercolor for every race's skin tone, not just some — a bug
+        found this round: the old boost-around-a-fixed-0.5 formula collapsed pale skin tones (elf, troll) toward
+        white, making brainrot LESS saturated than watercolor for those two specifically. not= alone (the check
+        above) can't catch 'different but wrong direction'."
+       (letfn [(saturation [[r g b]] (- (max r g b) (min r g b)))]
+         (every? (fn [[_ hues]]
+                   (> (saturation (pal/brainrot (:skin hues))) (saturation (pal/watercolor (:skin hues)))))
+                 pal/race-hues)))
 
 (def monster-composers
   [#(monsters/compose-slime) #(monsters/compose-goblin-raider {:seed 1})

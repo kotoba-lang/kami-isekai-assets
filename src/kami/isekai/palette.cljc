@@ -16,11 +16,19 @@
          mix (fn [c p] (+ (* c (- 1.0 amount)) (* p amount)))]
      (mapv mix [r g b] paper))))
 
-;; loud/saturated remix — opt-in only (see ns docstring). Pushes toward the
-;; nearest primary and boosts contrast; deliberately garish.
+;; loud/saturated remix — opt-in only (see ns docstring). Boosts contrast
+;; around the colour's OWN mean brightness (not a fixed 0.5) — boosting
+;; around a fixed midpoint looked right for mid-tone inputs but backfired on
+;; light ones: a pale skin tone's channels are all >0.5 already, so pushing
+;; each toward 1.0 independently clamped them together and LOWERED
+;; saturation vs. plain watercolor (found by actually computing max-min
+;; spread per race, not just asserting not=). Boosting around the color's
+;; own mean spreads channels apart relative to each other regardless of how
+;; bright or dark the input is, so it can't collapse the same way.
 (defn brainrot
   [[r g b]]
-  (let [boost (fn [c] (max 0.0 (min 1.0 (+ (* (- c 0.5) 1.9) 0.5))))]
+  (let [mean  (/ (+ r g b) 3.0)
+        boost (fn [c] (max 0.0 (min 1.0 (+ (* (- c mean) 1.9) mean))))]
     (mapv boost [r g b])))
 
 ;; per-race base hues (skin/hide, hair/mane-or-accent, garment) — muted before
