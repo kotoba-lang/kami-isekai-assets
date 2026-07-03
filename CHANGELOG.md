@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- **Added `op-protagonist-brainrot`** (30th preset): `palette/brainrot` —
+  the "最近流行りのブレインロット" aside from the original request — has
+  been implemented and even bug-fixed (a real saturation-direction issue,
+  see below) for many rounds, but had never actually been shown anywhere.
+  Same character as the existing `op-protagonist` preset (same race/
+  class/seed/cheat-aura), just `:variant :brainrot` instead of the
+  default `:watercolor` — a deliberate before/after pairing.
 - **Fixed a real JVM/ClojureScript divergence in `palette/seeded-jitter`**,
   found proactively (not from a live bug — network-isekai never actually
   runs `kami.isekai.*` in a browser, only via babashka/JVM for static

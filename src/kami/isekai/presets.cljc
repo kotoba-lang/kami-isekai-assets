@@ -30,6 +30,13 @@
         {:id (str (name race) "-" (name class))
          :compose #(chargen/compose-character {:race race :class class :seed (hash [race class])})})
       [{:id "op-protagonist" :compose #(chargen/compose-character {:race :human :class :adventurer :seed 999 :cheat? true})}
+       ;; palette/brainrot — the "最近流行りのブレインロット" aside from the original request,
+       ;; implemented and bug-fixed (a real saturation-direction bug, see CHANGELOG) rounds ago
+       ;; but never actually shown anywhere. Same character as op-protagonist (same race/class/
+       ;; seed/cheat), just :variant :brainrot instead of the default :watercolor — a deliberate
+       ;; before/after pairing demonstrating what the opt-in loud palette actually looks like.
+       {:id "op-protagonist-brainrot"
+        :compose #(chargen/compose-character {:race :human :class :adventurer :seed 999 :cheat? true :variant :brainrot})}
        {:id "slime" :compose monsters/compose-slime}
        {:id "slime-fire" :compose monsters/compose-slime-fire}
        {:id "slime-ice" :compose monsters/compose-slime-ice}
