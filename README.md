@@ -106,7 +106,12 @@ tensei/transition                              ; {:audio {...} :fx {...}} — th
 - **Structures** (`kami.isekai.structures`) — world-decoration props, not
   characters: `compose-castle` (keep + flanking turrets + banner) and
   `compose-guild-hall` (the adventurer's-guild storefront), both taking an
-  optional palette-hue override.
+  optional palette-hue override. `kami.isekai.catalog/structure-ids` (and
+  `summary`'s `:structures` count) also counts `tensei/compose-summoning-
+  circle` as a structure — it's a ground prop by shape, just documented
+  under 転生/tensei below since that's its thematic home. `(catalog/summary)`
+  reporting 3 structures while this section only lists 2 isn't a bug —
+  check `structure-ids` if the count doesn't match what you expected.
 - **Equipment** (`kami.isekai.equipment`) — weapon/held-item silhouettes
   (sword, dagger, staff, bow, shield, scepter); `equip`/`equip-for-class`
   compose one or more onto any character's `:sprite`. `compose-character`
