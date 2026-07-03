@@ -57,9 +57,40 @@
    :princess     {:accent [0.72 0.40 0.50]}
    :priest       {:accent [0.90 0.86 0.68]}})
 
+(defn- to-int32
+  "Coerce to the 32-bit signed integer domain bit-xor/bit-shift-left/
+   unsigned-bit-shift-right operate in ON BOTH PLATFORMS — ClojureScript's
+   bitwise ops implicitly ToInt32 their operands (ECMA-262 semantics: wrap
+   at 2^32, then treat the top half as negative), but the JVM's bit-* fns
+   run on genuine 64-bit longs with no such truncation. Confirmed this is a
+   REAL divergence, not a hypothetical one: ran seeded-jitter through both
+   bb (JVM) and nbb (real ClojureScript on Node) for identical large seeds
+   and got different jitter values for anything beyond ±2^31 (e.g.
+   9999999999 → 0.467 on the JVM, 0.507 in cljs). No currently-shipped
+   preset's seed is large enough to hit this (kami.isekai.presets' (hash
+   [race class]) values all stay within ±2^31), so nothing deployed is
+   wrong today — but a .cljc fn should genuinely agree across platforms
+   regardless of caller input, not by luck of which seeds happen to be used."
+  [n]
+  (let [m (bit-and n 0xffffffff)]
+    (if (>= m 0x80000000) (- m 0x100000000) m)))
+
+(defn- ushr32
+  "unsigned-bit-shift-right within a 32-bit-wide field, matching JS's >>>. JS's >>>
+   treats its left operand as an UNSIGNED 32-bit value and shifts within that
+   32-bit field; the JVM's unsigned-bit-shift-right shifts a value's actual 64-bit
+   long bit pattern — for a negative (sign-extended) input those are different
+   physical bit patterns, so the two platforms shift different bits and can
+   disagree even after to-int32 alone. Masking to 0xffffffff first confines the
+   shift to the same 32-bit-wide unsigned field JS uses."
+  [n amt]
+  (unsigned-bit-shift-right (bit-and n 0xffffffff) amt))
+
 (defn seeded-jitter
   "Deterministic small hue jitter from an integer seed, so N characters of the
    same race/class don't render identically. Pure — same seed → same jitter.
+   Agrees across JVM Clojure and ClojureScript for ANY integer seed (see
+   to-int32).
 
    :seed 0 is a fixed point of this XOR-shift construction and always
    returns 0.0 — and 0 is compose-character's default when no :seed is
@@ -68,9 +99,19 @@
    seeds (kami.isekai.presets does this via (hash [race class])) to get
    visual variety across multiple instances of the same race/class."
   [seed]
-  (let [s (bit-xor seed (bit-shift-left seed 13))
-        s (bit-xor s (unsigned-bit-shift-right s 17))
-        s (bit-xor s (bit-shift-left s 5))]
+  ;; to-int32/ushr32 after every bit-shift-left/unsigned-bit-shift-right, not just
+  ;; on the input: JS truncates to int32 (or uint32, for >>>) after EACH bitwise
+  ;; operator; the JVM's bit-* fns run on 64-bit longs with no such truncation
+  ;; until masked. Found by re-running the bb-vs-nbb comparison after each fix
+  ;; attempt: masking only the entry point wasn't enough (2147483647 still
+  ;; diverged — 0.9054 JVM vs 0.9214 cljs), and even masking every bit-shift-left
+  ;; step still left unsigned-bit-shift-right disagreeing (it shifts the value's
+  ;; real 64-bit bit pattern on the JVM vs. a 32-bit-wide field in JS — ushr32
+  ;; closes that specific gap).
+  (let [seed (to-int32 seed)
+        s (to-int32 (bit-xor seed (to-int32 (bit-shift-left seed 13))))
+        s (to-int32 (bit-xor s (ushr32 s 17)))
+        s (to-int32 (bit-xor s (to-int32 (bit-shift-left s 5))))]
     (/ (double (mod s 200)) 1000.0)))              ;; 0.0 .. 0.199
 
 (defn jitter-color [[r g b] seed]

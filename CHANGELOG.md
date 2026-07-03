@@ -2,6 +2,28 @@
 
 ## Unreleased
 
+- **Fixed a real JVM/ClojureScript divergence in `palette/seeded-jitter`**,
+  found proactively (not from a live bug — network-isekai never actually
+  runs `kami.isekai.*` in a browser, only via babashka/JVM for static
+  generation) by directly comparing `bb` (JVM) against `nbb` (real
+  ClojureScript on Node) for identical large seeds. `bit-shift-left` /
+  `unsigned-bit-shift-right` truncate to 32 bits *after every operation*
+  in JS (ECMA-262 semantics) but run on untruncated 64-bit longs on the
+  JVM — for seeds beyond ±2^31 this produced genuinely different jitter
+  values on each platform (`2147483647` → `0.9054` fill-color-derived
+  JVM output vs `0.9214` in cljs before the fix; confirmed a naive
+  input-only 32-bit mask wasn't enough — every intermediate
+  `bit-shift-left` step, and `unsigned-bit-shift-right`'s own 64-bit-vs-
+  32-bit-wide shift field, both needed explicit masking). No currently
+  shipped preset's seed is large enough to have hit this
+  (`kami.isekai.presets`' `(hash [race class])` values all stay within
+  ±2^31), so nothing deployed was ever wrong — but a `.cljc` fn should
+  agree across platforms by construction, not by luck of which seeds
+  happen to be used. Verified identical output across 30 random seeds up
+  to ±10^12 after the fix. `bb test` 43/43 (was 42/42) — added a
+  hardcoded cross-platform lock-in test (can't invoke real cljs from
+  `bb test` itself, so it pins the values both platforms already agreed
+  on by hand).
 - **Fixed the starter-party formation touching itself**: `compose-party`'s
   4-slot formation only ever verified offsets were *distinct*, not that
   members had real visual clearance. Computed actual per-member primitive

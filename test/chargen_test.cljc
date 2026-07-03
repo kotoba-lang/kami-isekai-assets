@@ -70,6 +70,18 @@
              b (chargen/compose-character {:race :human :class :adventurer :seed 0})]
          (= (:sprite a) (:sprite b) (:sprite (chargen/compose-character {:race :human :class :adventurer})))))
 
+(check "pal/seeded-jitter agrees with real ClojureScript for seeds beyond ±2^31, not just the JVM — a real bug
+        found this round via bb (JVM) vs nbb (actual cljs on Node), not a hypothetical one: 2147483647 gave 0.9054
+        on the JVM vs 0.9214 in cljs before the to-int32/ushr32 fix (bit-shift-left/unsigned-bit-shift-right
+        truncate to 32 bits per-operation in JS but run on untruncated 64-bit longs on the JVM). This test can't
+        actually invoke cljs from bb test, so it hardcodes the values BOTH platforms agreed on after the fix
+        (verified by hand, see CHANGELOG) — if a future edit to seeded-jitter breaks that agreement again, this
+        catches the JVM side deviating from the known-cross-platform-correct answer, even though it can't re-run
+        the cljs side itself."
+       (= [(pal/seeded-jitter 2147483647) (pal/seeded-jitter 9999999999) (pal/seeded-jitter -9999999999)
+           (pal/seeded-jitter 4294967296)]
+          [0.039 0.149 0.107 0.0]))
+
 (check "cheat? adds a golden aura (sprite grows by the aura primitives, tags gain cheat markers)"
        (let [plain (chargen/compose-character {:race :human :class :adventurer :seed 3})
              cheat (chargen/compose-character {:race :human :class :adventurer :seed 3 :cheat? true})]
