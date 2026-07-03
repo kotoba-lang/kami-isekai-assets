@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+- **Fixed the starter-party formation touching itself**: `compose-party`'s
+  4-slot formation only ever verified offsets were *distinct*, not that
+  members had real visual clearance. Computed actual per-member primitive
+  extents (not a guess) and found `starter-party`'s slot 0 — always
+  cheat-flagged by convention, whose aura reaches a 210-unit radius vs. a
+  bare character's ~150-175 — had EXACTLY ZERO clearance from its top-row
+  neighbour at the old offsets (210+170 half-widths == the 380-unit gap
+  between them). Scaled the 4-member formation ~1.35x using starter-
+  party's real footprints so every pairwise gap clears with margin.
+  Replaced the weak "distinct offset" check with one that computes real
+  clearance from actual primitive extents — confirmed it catches the
+  original bug by reverting the fix and watching it fail. `bb test` 42/42
+  (was 41/41).
 - **Replaced another proxy-assertion placeholder**, same audit instinct
   that found last round's `brainrot` bug: "different seeds can jitter skin
   colour" only checked `(map? (compose-character ...))`, which would pass

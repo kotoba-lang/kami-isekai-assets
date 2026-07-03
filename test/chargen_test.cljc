@@ -284,6 +284,29 @@
                         (every? #(and (valid-sprite? (:sprite %)) (vector? (:offset %))) members))))
                [1 2 3 4 5 6]))
 
+(check "starter-party's formation gives every pair of members real visual clearance, not just distinct offset
+        vectors — found a real bug this round: 'distinct offset' let slot 0 (always cheat-flagged by convention,
+        whose aura reaches a 210-unit radius vs. a bare character's ~150-175) sit with EXACTLY ZERO clearance
+        from its formation neighbour (210+170 half-widths == the 380-unit gap between them at the old offsets).
+        This computes each member's real primitive extents instead of trusting a fixed guess."
+       (letfn [(extent [[kind o]]
+                 (+ (Math/abs (double (:dx o 0)))
+                    (case kind
+                      :circle  (:r o 10)
+                      :ellipse (:rx o 10)
+                      :rect    (/ (:w o 10) 2)
+                      :arc     (+ (:r o 10) (/ (:w o 8) 2))
+                      0)))
+               (footprint [m] (apply max (map extent (:sprite m))))
+               (dist [[x1 y1] [x2 y2]] (Math/sqrt (+ (Math/pow (- x2 x1) 2) (Math/pow (- y2 y1) 2))))]
+         (let [members (party/compose-party party/starter-party)
+               n (count members)]
+           (every? (fn [[i j]]
+                     (let [mi (nth members i) mj (nth members j)]
+                       (>= (dist (:offset mi) (:offset mj))
+                           (+ 30 (footprint mi) (footprint mj)))))   ;; 30 = minimum visual clearance margin
+                   (for [i (range n) j (range (inc i) n)] [i j])))))
+
 (check "kami.isekai.party/starter-party composes to 4 members with the cheat-flagged protagonist first"
        (let [members (party/compose-party party/starter-party)]
          (and (= 4 (count members))

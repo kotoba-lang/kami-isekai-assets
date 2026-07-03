@@ -17,7 +17,18 @@
   {1 [[0 0]]
    2 [[-160 0] [160 0]]
    3 [[0 -180] [-190 120] [190 120]]
-   4 [[-190 -180] [190 -180] [-190 120] [190 120]]
+   ;; the 4-slot offsets are wider than they look at a glance — starter-party's
+   ;; slot 0 is always cheat-flagged by convention (the isekai protagonist
+   ;; trope), and :cheat? true's aura adds an outer glow ring reaching a 210
+   ;; world-unit radius from centre (chargen/cheat-aura), well past a bare
+   ;; character's usual ~150-175. At the previous [-190 -180]/[190 -180] top
+   ;; row, that aura and the adjacent slot's silhouette had exactly ZERO
+   ;; clearance (210+170 half-widths == the 380-unit gap between them,
+   ;; found by computing real per-member primitive extents, not eyeballing
+   ;; it) — the two would visually touch. Scaled the whole formation ~1.35x
+   ;; so every pairwise gap clears (footprint sum + 30 units) using
+   ;; starter-party's actual real member footprints, not a guess.
+   4 [[-260 -240] [260 -240] [-260 160] [260 160]]
    5 [[0 -260] [-220 -60] [220 -60] [-140 200] [140 200]]})
 
 (defn- formation-for [n]
