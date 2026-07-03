@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+- **Strengthened the sprite validity gate from shape-checking to numeric
+  sanity**: `valid-sprite?` only ever checked "is this a vector of
+  `{:circle {}}`-shaped maps" — it would pass a sprite with a negative
+  radius, a NaN colour channel, or a colour value miles outside `[0,1]`
+  without complaint, since the container shape is still technically
+  valid. Added `sane-prim?`/`sane-sprite?` checking every primitive's
+  actual `dx`/`dy`/dimension/colour values (portable NaN test via
+  `(= n n)`, works identically on JVM and cljs with no `#?(:clj ...)`
+  guard needed) and ran it across all 80 race×class combos × 3 seeds
+  (240 compositions) plus every monster/structure/tensei composer (16
+  more) — clean pass, 0 problems, but locked in as a permanent gate.
+  Verified the check genuinely discriminates (not another `map?`-style
+  placeholder): confirmed it rejects a negative radius, a NaN colour
+  channel, and an out-of-range colour value, and accepts valid data.
+  `bb test` 45/45 (was 43/43).
 - **Added `op-protagonist-brainrot`** (30th preset): `palette/brainrot` —
   the "最近流行りのブレインロット" aside from the original request — has
   been implemented and even bug-fixed (a real saturation-direction issue,

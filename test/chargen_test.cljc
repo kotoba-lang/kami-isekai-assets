@@ -26,6 +26,23 @@
        (seq sprite)
        (every? (fn [[kind opts]] (and (prim-kinds kind) (map? opts))) sprite)))
 
+;; a NUMERIC-SANITY check, not just a shape check — valid-sprite? passes for a sprite with a
+;; negative radius or a NaN colour channel (still "a vector of {:circle {}}-shaped maps").
+;; (= n n) is a portable NaN test on both the JVM and cljs (NaN is the one value not equal to
+;; itself) — Double/isNaN would need a #?(:clj ...) guard for cljs portability, this doesn't.
+(defn- finite? [n] (and (number? n) (= n n)))
+(defn sane-prim? [[kind o]]
+  (and (finite? (:dx o 0)) (finite? (:dy o 0))
+       (case kind
+         :circle  (and (finite? (:r o 10)) (pos? (:r o 10)))
+         :ellipse (and (finite? (:rx o 10)) (pos? (:rx o 10)) (finite? (:ry o 10)) (pos? (:ry o 10)))
+         :rect    (and (finite? (:w o 10)) (pos? (:w o 10)) (finite? (:h o 10)) (pos? (:h o 10)))
+         :arc     (and (finite? (:r o 10)) (pos? (:r o 10)) (finite? (:w o 8)) (pos? (:w o 8)))
+         false)
+       (let [c (or (:fill o) (:stroke o))]
+         (and c (every? #(and (finite? %) (>= % 0) (<= % 1.01)) c)))))
+(defn sane-sprite? [sprite] (and (valid-sprite? sprite) (every? sane-prim? sprite)))
+
 (defn throws? [f]
   (try (f) false (catch #?(:clj Exception :cljs :default) _ true)))
 
@@ -50,6 +67,32 @@
                            (valid-sprite? (:sprite (chargen/compose-character {:race rid :class cid :seed 7}))))
                          classes/classes))
                races/races))
+
+(check "every one of the 80 race×class combos, across 3 different seeds, is NUMERICALLY sane —
+        not just shaped right. valid-sprite? alone would pass a sprite with a negative radius or a
+        NaN colour channel unnoticed (still 'a vector of {:circle {}}-shaped maps'); this checks
+        every primitive's actual dx/dy/dimension/colour values instead of trusting the container
+        shape. Clean pass — 240 compositions, 0 problems — but locking it in as a permanent gate
+        closes the gap valid-sprite? alone leaves open for a future composer bug."
+       (every? (fn [[rid _]]
+                 (every? (fn [[cid _]]
+                           (every? (fn [seed] (sane-sprite? (:sprite (chargen/compose-character {:race rid :class cid :seed seed}))))
+                                   [0 1 42]))
+                         classes/classes))
+               races/races))
+
+(check "every monster/structure/tensei composer's sprite is numerically sane too (same gap as
+        above, checked across every non-chargen composer in the catalog)"
+       (every? sane-sprite?
+               (map :sprite
+                    [(monsters/compose-slime) (monsters/compose-slime-fire) (monsters/compose-slime-ice)
+                     (monsters/compose-slime-poison) (monsters/compose-goblin-raider {:seed 1})
+                     (monsters/compose-orc-brute {:seed 2}) (monsters/compose-dragon {:seed 3})
+                     (monsters/compose-kobold-scout {:seed 4}) (monsters/compose-wyvern {:seed 5})
+                     (monsters/compose-skeleton {:seed 6}) (monsters/compose-wolf)
+                     (monsters/compose-troll {:seed 7}) (monsters/compose-ghost)
+                     (structures/compose-castle) (structures/compose-guild-hall)
+                     (tensei/compose-summoning-circle)])))
 
 (check "compose-character is deterministic (same seed → identical sprite)"
        (= (chargen/compose-character {:race :elf :class :mage :seed 42})
