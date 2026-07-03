@@ -14,16 +14,30 @@
   JVM output vs `0.9214` in cljs before the fix; confirmed a naive
   input-only 32-bit mask wasn't enough — every intermediate
   `bit-shift-left` step, and `unsigned-bit-shift-right`'s own 64-bit-vs-
-  32-bit-wide shift field, both needed explicit masking). No currently
-  shipped preset's seed is large enough to have hit this
-  (`kami.isekai.presets`' `(hash [race class])` values all stay within
-  ±2^31), so nothing deployed was ever wrong — but a `.cljc` fn should
-  agree across platforms by construction, not by luck of which seeds
-  happen to be used. Verified identical output across 30 random seeds up
-  to ±10^12 after the fix. `bb test` 43/43 (was 42/42) — added a
-  hardcoded cross-platform lock-in test (can't invoke real cljs from
-  `bb test` itself, so it pins the values both platforms already agreed
-  on by hand).
+  32-bit-wide shift field, both needed explicit masking).
+
+  **Correction to this entry** (caught immediately after committing, while
+  regenerating presets to check for a diff): the claim above that "no
+  shipped preset's seed is large enough to have hit this" was WRONG.
+  `bit-shift-left ... 13` overflows 32 bits for almost any seed with more
+  than a handful of significant bits — not just seeds literally beyond
+  ±2^31 — so every one of `kami.isekai.presets`' 12 race×class seeds
+  (e.g. `(hash [:elf :mage])` = 2039901199, comfortably inside ±2^31)
+  ALSO already diverged between bb and nbb before this fix (verified by
+  hand for all 12). Nothing currently deployed was *visibly* broken only
+  because network-isekai has only ever generated these presets via
+  babashka/JVM — but the JVM-side values themselves were already the
+  "wrong" (platform-inconsistent) half of the disagreement, not an
+  arbitrarily-different-but-equally-valid one. This fix changes the
+  skin-tone jitter for all 12 currently-shipped race×class presets to the
+  now-cross-platform-correct value — see kami-isekai-assets consumers
+  (network-isekai) for the regenerate+redeploy follow-up.
+
+  Verified identical bb/nbb output across 30 random seeds up to ±10^12
+  after the fix, plus all 12 real preset seeds. `bb test` 43/43 (was
+  42/42) — added a hardcoded cross-platform lock-in test (can't invoke
+  real cljs from `bb test` itself, so it pins the values both platforms
+  already agreed on by hand).
 - **Fixed the starter-party formation touching itself**: `compose-party`'s
   4-slot formation only ever verified offsets were *distinct*, not that
   members had real visual clearance. Computed actual per-member primitive
