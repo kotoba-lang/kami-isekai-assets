@@ -344,22 +344,36 @@
         whose aura reaches a 210-unit radius vs. a bare character's ~150-175) sit with EXACTLY ZERO clearance
         from its formation neighbour (210+170 half-widths == the 380-unit gap between them at the old offsets).
         This computes each member's real primitive extents instead of trusting a fixed guess."
-       (letfn [(extent [[kind o]]
-                 (+ (Math/abs (double (:dx o 0)))
-                    (case kind
-                      :circle  (:r o 10)
-                      :ellipse (:rx o 10)
-                      :rect    (/ (:w o 10) 2)
-                      :arc     (+ (:r o 10) (/ (:w o 8) 2))
-                      0)))
-               (footprint [m] (apply max (map extent (:sprite m))))
+       ;; 2026-07-08: this check used to use a single dx-only scalar 'footprint' (max over primitives of
+       ;; |:dx| + own-radius) compared against straight-line offset distance. That formula is BLIND to :dy —
+       ;; it silently ignored any primitive offset vertically from the entity centre. Real GPU pixel rendering
+       ;; of starter-party (test/render_pixel_test.clj) found an actual on-screen overlap the old formula
+       ;; missed entirely: chargen's mage `:cloak` accessory hangs DOWN via :dy (not :dx), so its true reach
+       ;; was invisible to a dx-only check. Fixed by projecting each primitive onto the ACTUAL axis between
+       ;; the two slots being compared (a standard separating-axis-style projection — exact for the
+       ;; axis-aligned :circle/:ellipse/:rect/:arc primitives this catalog uses, since none of them carry
+       ;; :rot), instead of one direction-blind scalar.
+       (letfn [(projection [[kind o] [ux uy]]
+                 (let [dx (double (:dx o 0)) dy (double (:dy o 0))
+                       centre (+ (* dx ux) (* dy uy))]
+                   (+ centre
+                      (case kind
+                        :circle  (:r o 10)
+                        :ellipse (Math/sqrt (+ (Math/pow (* (:rx o 10) ux) 2) (Math/pow (* (:ry o 10) uy) 2)))
+                        :rect    (+ (* (/ (:w o 10) 2) (Math/abs ux)) (* (/ (:h o 10) 2) (Math/abs uy)))
+                        :arc     (+ (:r o 10) (/ (:w o 8) 2))
+                        0))))
+               (reach [m dir] (apply max (map #(projection % dir) (:sprite m))))
                (dist [[x1 y1] [x2 y2]] (Math/sqrt (+ (Math/pow (- x2 x1) 2) (Math/pow (- y2 y1) 2))))]
          (let [members (party/compose-party party/starter-party)
                n (count members)]
            (every? (fn [[i j]]
-                     (let [mi (nth members i) mj (nth members j)]
-                       (>= (dist (:offset mi) (:offset mj))
-                           (+ 30 (footprint mi) (footprint mj)))))   ;; 30 = minimum visual clearance margin
+                     (let [mi (nth members i) mj (nth members j)
+                           [x1 y1] (:offset mi) [x2 y2] (:offset mj)
+                           d (dist (:offset mi) (:offset mj))
+                           dir [(/ (- x2 x1) d) (/ (- y2 y1) d)]
+                           neg-dir [(- (nth dir 0)) (- (nth dir 1))]]
+                       (>= d (+ 30 (reach mi dir) (reach mj neg-dir)))))   ;; 30 = minimum visual clearance margin
                    (for [i (range n) j (range (inc i) n)] [i j])))))
 
 (check "kami.isekai.party/starter-party composes to 4 members with the cheat-flagged protagonist first"

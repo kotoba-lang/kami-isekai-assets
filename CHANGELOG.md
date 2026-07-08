@@ -2,6 +2,39 @@
 
 ## Unreleased
 
+- **Second render-adapter case: a real composed PARTY (not just one monster), and a genuine
+  formation-clearance bug the first round's world-unit-only math couldn't see.** The first render
+  pass (below) only ever proved `render-adapter/preset->scene` (ONE entity, `compose-slime`).
+  `presets->scene` (SEVERAL entities, each at its own `:offset`, in one frame — exactly the shape
+  `kami.isekai.party/compose-party` produces) existed since day one but had never actually been
+  rendered, only shape/unit-checked. Rendering `party/starter-party`'s real 4 members
+  (protagonist/knight/mage/rogue) through `presets->scene` → `kami.scene2d/frame-quads` found a
+  real, on-screen overlap `test/chargen_test.cljc`'s existing "formation clearance" check missed
+  entirely: that check computed each member's "footprint" from `:dx` + radius only, silently
+  ignoring `:dy` — so `kami.isekai.chargen`'s mage `:cloak` accessory (which hangs DOWN via `:dy`,
+  not sideways via `:dx`) was invisible to it, and the cheat-flagged protagonist's aura visibly
+  bled into the mage's cloak in the actual render. Fixed the clearance check to project each
+  primitive onto the real slot-to-slot axis (direction-aware, exact for this catalog's
+  axis-aligned circle/ellipse/rect/arc primitives) instead of one direction-blind scalar — it now
+  correctly flags the old starter-party formation as 54.5 world-units short on that pair — and
+  rescaled `kami.isekai.party`'s 4-slot formation ~1.25x to restore real clearance on every pair
+  (verified both by the corrected math via `bb test`, and by re-rendering the real party:
+  `test/render_pixel_test.clj`'s new `starter-party-renders-real-pixels` samples each of the 4
+  members' own distinctive on-screen feature — the protagonist's cheat-aura, the mage's staff
+  orb, the knight's shield, the rogue's dagger blade — at the exact screen position its own
+  formation `:offset` predicts, plus confirms the canvas centre stays background (the 4 aren't
+  piled at the origin). Deliberately broke `presets->scene`'s `pos` threading (always place at
+  `[0 0]`) to confirm the check discriminates: 5 of 6 assertions failed with real numbers
+  (e.g. the protagonist-aura sample went from `(255 255 193)` to plain background `(128 128
+  128)`), reverted cleanly, and the render passed again with the original numbers.
+  Along the way, found (and documented — NOT fixed here, it lives in the sibling
+  `kotoba-lang/webgpu` repo's `kami.sprite-gpu`, out of this repo's scope) that `:rect`-shaped
+  primitives render at roughly DOUBLE their intended size through the GPU pipeline relative to
+  the Canvas2D reference painter (`kami.sprite2d.cljs`) this catalog's primitive vocabulary was
+  designed against — verified directly with a synthetic `[:rect {:w 100 :h 50}]` primitive
+  measuring ~202×100 actual on-screen pixels. `:tree-count 0` added to the party test's scene
+  config since `kami.scene2d/frame-quads` draws background trees unconditionally otherwise
+  (unrelated content that would contaminate "is this background" pixel samples).
 - **First real pixel of a kami-isekai-assets composed entity on screen,
   automated and pixel-verified** — closes the biggest maturity gap a
   2026-07 ecosystem audit found: this library's `:sprite` EDN had never

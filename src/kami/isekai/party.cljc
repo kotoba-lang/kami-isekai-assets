@@ -28,7 +28,27 @@
    ;; it) — the two would visually touch. Scaled the whole formation ~1.35x
    ;; so every pairwise gap clears (footprint sum + 30 units) using
    ;; starter-party's actual real member footprints, not a guess.
-   4 [[-260 -240] [260 -240] [-260 160] [260 160]]
+   ;;
+   ;; 2026-07-08 correction (found via the first real GPU pixel render of a
+   ;; composed party, not just the footprint math above): that footprint
+   ;; check only ever measured reach along :dx (horizontal) — it silently
+   ;; ignored :dy-offset shapes, so mage's cloak rect (chargen's class accessory,
+   ;; `:dy (* head-r 1.6) :h (* head-r 2.6)`, i.e. it hangs DOWN from the
+   ;; entity centre, not sideways) was invisible to it. Rendering
+   ;; starter-party's actual pixels showed the protagonist's aura (slot 0,
+   ;; directly south of the mage in this formation) visibly bleeding into
+   ;; the mage's cloak — real, on-screen overlap the old check couldn't see
+   ;; because it never looked at :dy. test/chargen_test.cljc's clearance
+   ;; check is now direction-aware (projects each primitive onto the actual
+   ;; slot-to-slot axis instead of a single dx-only scalar), which correctly
+   ;; flags the previous [-260 -240]/[260 -240]/[-260 160]/[260 160] offsets
+   ;; as 54.5 world-units short on the slot0↔slot2 (protagonist↔mage) pair.
+   ;; Rescaled ~1.25x (was already thin on the earlier 1.35x pass because
+   ;; that pass could only see :dx, not the mage's cloak) to restore real
+   ;; clearance on every pair, confirmed both by the corrected math and by
+   ;; re-rendering the real starter-party through kami.isekai.render-adapter
+   ;; (test/render_pixel_test.clj's party case).
+   4 [[-325 -300] [325 -300] [-325 200] [325 200]]
    5 [[0 -260] [-220 -60] [220 -60] [-140 200] [140 200]]})
 
 (defn- formation-for [n]
