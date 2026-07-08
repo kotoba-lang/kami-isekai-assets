@@ -27,6 +27,7 @@
             [kami.scene2d :as s2]
             [kami.sprite-gpu :as sg]
             [kami.isekai.monsters :as monsters]
+            [kami.isekai.party :as party]
             [kami.isekai.render-adapter :as radapt]
             [cheshire.core :as json]))
 
@@ -79,6 +80,117 @@
         "the slime's watercolour-green body fill is actually on screen (not just present as data)")
     (is (> (:dark r) 20)
         "the two dark eye-dot sub-primitives are also on screen (whole recipe drew, not just the first primitive)")))
+
+;; ── party case: kami.isekai.render-adapter/presets->scene, exercised end-to-end with a REAL
+;; composed party (kami.isekai.party/compose-party party/starter-party) for the first time — the
+;; slime case above only ever proved preset->scene (ONE entity). presets->scene (SEVERAL entities,
+;; each at its own :offset, in one frame) has existed since day one but had never actually been
+;; rendered; only shape/unit-checked (test/chargen_test.cljc's footprint-clearance check, which
+;; reasons about the same :offset numbers but never draws a pixel).
+;;
+;; Camera note: kami.sprite2d.layout's world→screen scale-k (0.34 default × W/900) shrinks an
+;; entity's world *position* on the way to screen space, but kami.scene2d/op->quads does NOT
+;; apply that same k to a sprite's own primitive sizes (unlike the Canvas2D painter
+;; kami.sprite2d.cljs, which does `.scale ctx k k` before drawing — see that file's draw-sprite!).
+;; That asymmetry means the WORLD-unit clearance test/chargen_test.cljc already validates for
+;; starter-party's formation only maps 1:1 onto SCREEN-pixel clearance at k=1 exactly. `:scale
+;; 0.9` here at W=1000 gives scale-k = 0.9*(1000/900) = 1.0, so this test renders at the same
+;; scale the clearance math already reasons in — not a workaround, just picking the one camera
+;; zoom where "clear in world units" demonstrably means "clear on screen." `:tree-count 0`
+;; disables kami.scene2d/tree-quads' default background scatter (90 trees within a 4200-unit
+;; spread, drawn unconditionally by frame-quads) — real content this repo's composed entities
+;; have nothing to do with, and without it every "is this still background" sample below would
+;; be contaminated by whatever tree circles happen to land nearby.
+;;
+;; A bigger, GENUINELY OUT-OF-SCOPE finding from building this test (documenting, not fixing —
+;; it lives in kotoba-lang/webgpu's kami.sprite-gpu, not this repo's render-adapter.cljc):
+;; kami.sprite-gpu/prim->quad's :rect case sets the GPU quad's :size (half-extents) directly to
+;; a primitive's :w/:h, but the Canvas2D reference painter this catalog's primitive vocabulary was
+;; designed against (kami.sprite2d.cljs's `prim!`) draws a :rect via `fillRect(dx-w/2, dy-h/2, w,
+;; h)` — i.e. :w/:h are FULL width/height there. Verified directly: a synthetic `[:rect {:w 100
+;; :h 50 ...}]` primitive rendered through kami.scene2d/kami.sprite-gpu measures ~202×100 actual
+;; on-screen pixels, not ~100×50 — every :rect-shaped primitive in this catalog (swords, cloaks,
+;; crowns, satchels, horns, tusks, ...) renders at roughly DOUBLE its intended size through this
+;; GPU path relative to the Canvas2D one (circles/ellipses are unaffected — :r/:rx/:ry already
+;; mean the same half-extent in both renderers). Because of this, this test does not assert
+;; pixel-exact inter-member clearance/background gaps (that would be testing kami.sprite-gpu's
+;; sizing, not this repo's render-adapter) — the party.cljc formation fix + chargen_test.cljc's
+;; corrected clearance check (both in THIS repo, both about world-unit/Canvas2D-semantics
+;; geometry) are verified at the unit level (`bb test`), independent of this GPU-side gap.
+(def party-members (party/compose-party party/starter-party))
+
+;; entity centres at k=1, W=H=1000 (sx = 500+x, sy = 500-y — world +y is screen up, see
+;; kami.sprite2d.layout/draw-list): every sample point below is derived from these, not eyeballed.
+(def party-centres
+  (into {} (map (fn [m] [(first (:tags m)) (let [[x y] (:offset m)] [(+ 500 x) (- 500 y)])])
+                party-members)))
+
+(defn- render-scene
+  "Render an already-assembled {:scene :snap} (kami.scene2d shape) through frame-quads → packed
+   GPU instances → a real WebGL2 W×H canvas (neutral mid-gray clear, same reasoning as `render`
+   above), and read back the whole RGBA buffer plus a handful of named [x y] sample points."
+  [scene snap W H samples]
+  (let [{:keys [quads]} (s2/frame-quads scene snap [] 0 W H)
+        js (str "const PV=" (json/generate-string (glsl "sprite.vert")) ",PF=" (json/generate-string (glsl "sprite.frag")) ";"
+                "const data=new Float32Array(" (json/generate-string (vec (sg/pack-instances quads))) ");const N=" (count quads) ";"
+                "const W=" W ",H=" H ";const gl=Object.assign(document.createElement('canvas'),{width:W,height:H}).getContext('webgl2');"
+                "function c(t,s){const x=gl.createShader(t);gl.shaderSource(x,s);gl.compileShader(x);return x;}"
+                "const p=gl.createProgram();gl.attachShader(p,c(gl.VERTEX_SHADER,PV));gl.attachShader(p,c(gl.FRAGMENT_SHADER,PF));gl.linkProgram(p);"
+                "const vao=gl.createVertexArray();gl.bindVertexArray(vao);const ib=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,ib);gl.bufferData(gl.ARRAY_BUFFER,data,gl.STATIC_DRAW);"
+                "[[0,2,0],[1,2,8],[2,1,16],[3,1,20],[4,4,24]].forEach(([l,n,o])=>{gl.enableVertexAttribArray(l);gl.vertexAttribPointer(l,n,gl.FLOAT,false,48,o);gl.vertexAttribDivisor(l,1);});"
+                "const ub=gl.createBuffer();gl.bindBuffer(gl.UNIFORM_BUFFER,ub);gl.bufferData(gl.UNIFORM_BUFFER,new Float32Array([W,H,0,0]),gl.STATIC_DRAW);"
+                "gl.uniformBlockBinding(p,gl.getUniformBlockIndex(p,'U_block_0Vertex'),0);gl.bindBufferBase(gl.UNIFORM_BUFFER,0,ub);"
+                "gl.useProgram(p);gl.viewport(0,0,W,H);gl.clearColor(0.5,0.5,0.5,1);gl.clear(gl.COLOR_BUFFER_BIT);"
+                "gl.enable(gl.BLEND);gl.blendFunc(gl.ONE,gl.ONE_MINUS_SRC_ALPHA);"
+                "if (N>0) gl.drawArraysInstanced(gl.TRIANGLES,0,6,N);"
+                "const b=new Uint8Array(W*H*4);gl.readPixels(0,0,W,H,gl.RGBA,gl.UNSIGNED_BYTE,b);"
+                "function px(x,y){const i=(y*W+x)*4;return [b[i],b[i+1],b[i+2],b[i+3]];}"
+                "return {n:N, px:{"
+                (clojure.string/join "," (map (fn [[k [x y]]] (str "\"" (name k) "\":px(" (int x) "," (int y) ")")) samples))
+                "}};")]
+    (pw/eval-page js)))
+
+(defn- close? [[r g b] [er eg eb] tol]
+  (and (<= (Math/abs (- r er)) tol) (<= (Math/abs (- g eg)) tol) (<= (Math/abs (- b eb)) tol)))
+
+(deftest starter-party-renders-real-pixels
+  (let [placements (map-indexed (fn [i m] [(str "member" i) m (:offset m)]) party-members)
+        {:keys [scene snap]} (radapt/presets->scene placements)
+        scene (-> scene
+                  (assoc-in [:render/sprite2d :scale] 0.9)        ;; k=1 at W=1000, see note above
+                  (assoc-in [:render/sprite2d :tree-count] 0))    ;; no background tree scatter
+        [px py] (get party-centres "human")   ;; protagonist (slot 0) — cheat-flagged, has the aura
+        [mx my] (get party-centres "elf")     ;; mage (slot 2) — has the staff's blue orb
+        [kx ky] (get party-centres "dwarf")   ;; knight (slot 1) — has sword+shield
+        [rx ry] (get party-centres "beastman");; rogue (slot 3) — has a dagger, no aura/orb
+        samples {:protagonist-aura   [px (- py 200)]   ;; inside the aura (r 210), above the head
+                                                        ;; (reaches only to ~183) — kami.isekai.chargen/cheat-aura
+                 :mage-staff-orb     [(+ mx 110) (- my 114)]
+                 :knight-shield-gold [(- kx 110) (+ ky 10)]
+                 :rogue-dagger-blade [(+ rx 100) ry]
+                 :dead-centre        [500 500]}
+        r (render-scene scene snap 1000 1000 samples)
+        px* (:px r)]
+    (println "  kami-isekai-assets starter-party →GPU render: n=" (:n r) "samples=" px*)
+    (is (> (:n r) 25)
+        "compose-party's 4 members (bodies + equipment + the protagonist's aura) produced a
+         substantial number of GPU quads, not just one or two (30 with trees suppressed via
+         :tree-count 0 — see the note above the deftest)")
+    (is (close? (:protagonist-aura px*) [255 255 193] 12)
+        "the protagonist's cheat-aura (kami.isekai.chargen/cheat-aura, two overlapping translucent
+         gold circles) is actually on screen, at the exact point its own formation offset predicts")
+    (is (close? (:mage-staff-orb px*) [115 166 242] 6)
+        "the mage's staff (kami.isekai.equipment :staff, an opaque blue glow orb) rendered at its
+         predicted screen position — a DIFFERENT party member's equipment, proving presets->scene
+         threaded each member's own composed :sprite (not e.g. all 4 sharing member 0's)")
+    (is (close? (:knight-shield-gold px*) [209 168 61] 6)
+        "the knight's shield (kami.isekai.equipment :shield) rendered at its predicted position")
+    (is (close? (:rogue-dagger-blade px*) [184 189 199] 6)
+        "the rogue's dagger blade rendered at its predicted position")
+    (is (close? (:dead-centre px*) [128 128 128] 4)
+        "the canvas centre (world origin) is still plain background — the 4 members are actually
+         spread across their formation, not all collapsed onto [0 0] (which is exactly what a
+         presets->scene regression that drops `pos` and always places at the origin would produce)")))
 
 (let [{:keys [fail error]} (run-tests 'render-pixel-test)]
   (when (pos? (+ fail error))
