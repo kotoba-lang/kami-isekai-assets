@@ -18,16 +18,43 @@ jobs:
       - name: bb test — every race/class/monster/skill composes to valid sprite2d data
         run: bb test
 
-  # NOTE (2026-07-08): bb.edn also defines a `render-test` task (real headless-Chromium WebGL2
-  # pixel verification via kotoba-lang/webgpu's kami.playwright, reusing the sprite-SDF GLSL
-  # fixtures + the same harness as that repo's own playwright_*_test.clj files) -- but that task
-  # only exists on the still-open `feat/render-adapter-poc` PR (#1), not yet on `main`, so it is
-  # deliberately NOT wired into this workflow yet. It has been separately verified runnable on a
-  # real ubuntu-latest GitHub Actions runner once two things are true: (1) that PR is merged, and
-  # (2) kotoba-lang/webgpu's own kami.playwright bridge has a cross-platform (not macOS-only)
-  # chromium resolution -- see kotoba-lang/webgpu#9, which fixes exactly that and itself went
-  # green on ubuntu-latest. Once #1 merges here, add a `render-verify` job mirroring that PR's
-  # `render-verify` job: checkout this repo + sibling kotoba-lang/webgpu + ITS sibling
-  # kotoba-lang/expr (the same orgs/kotoba-lang/{kami-isekai-assets,webgpu,expr} layout the
-  # west-managed superproject already uses), npm ci + `npx playwright install chromium` inside
-  # the webgpu checkout, then `bb render-test` from this repo.
+  render-verify:
+    # Real-pixel headless-WebGL2 verification (bb.edn's `render-test` task, via kotoba-lang/webgpu's
+    # kami.playwright + kami.scene2d/kami.sprite-gpu, readPixels-based): composes monsters/compose-slime
+    # through kami.isekai.render-adapter, draws it into a real WebGL2 canvas, and asserts pixel colors.
+    # Not part of the `test` job above -- this repo's own `bb test` stays free of the render-pipeline
+    # dependency (kotoba-lang/webgpu + kotoba-lang/expr are sibling-checkout-only, per bb.edn's
+    # render-test task doc). Both prerequisites this depended on are now merged: kotoba-lang/webgpu#9
+    # (cross-platform `chromium.executablePath()` resolution, native on webgpu's main as of 77e2062 --
+    # no manual pw_eval.cjs patch needed here, unlike kami-app-isekai's render-verify job which predates
+    # that merge) and this repo's own render_adapter.cljc + render-test task (#1).
+    name: bb render-test (headless WebGL2 pixel verification of compose-slime)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout kami-isekai-assets (as a sibling of webgpu/expr below, for bb.edn's ../webgpu)
+        uses: actions/checkout@v4
+        with: { path: kami-isekai-assets }
+      - name: Checkout kotoba-lang/webgpu (sibling dep, render-test's kami.scene2d/kami.sprite-gpu/kami.playwright)
+        uses: actions/checkout@v4
+        with: { repository: kotoba-lang/webgpu, path: webgpu }
+      - name: Checkout kotoba-lang/expr (sibling dep, webgpu's bb.edn "../expr/src" — kotoba.expr, ADR-2607051500)
+        uses: actions/checkout@v4
+        with: { repository: kotoba-lang/expr, path: expr }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '21' }
+      - name: Install babashka
+        uses: DeLaGuardo/setup-clojure@13.0
+        with: { bb: 'latest' }
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - name: npm ci (webgpu checkout — playwright devDependency, committed package.json/package-lock.json)
+        working-directory: webgpu
+        run: npm ci
+      - name: Install headless Chromium (full "Chrome for Testing" build)
+        working-directory: webgpu
+        run: npx playwright install --with-deps chromium
+      - name: bb render-test — headless WebGL2 pixel-verify of monsters/compose-slime
+        working-directory: kami-isekai-assets
+        env:
+          NODE_PATH: ${{ github.workspace }}/webgpu/node_modules
+        run: bb render-test
