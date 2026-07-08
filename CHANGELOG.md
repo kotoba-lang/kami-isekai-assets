@@ -2,6 +2,33 @@
 
 ## Unreleased
 
+- **First real pixel of a kami-isekai-assets composed entity on screen,
+  automated and pixel-verified** — closes the biggest maturity gap a
+  2026-07 ecosystem audit found: this library's `:sprite` EDN had never
+  actually been rendered by anything in ITS OWN test/demo suite
+  (network-isekai consumes it, but that's a separate repo/org — its
+  Asset Hub deploy step and its `isekai-gallery` game both just write/
+  paste `:sprite` data, they don't verify a pixel came out the other
+  end). Added `kami.isekai.render-adapter` — small, dependency-free glue
+  turning one (or several) composed entities into the `{:scene :snap}`
+  shape `kotoba-lang/webgpu`'s `kami.scene2d/frame-quads` expects (the
+  actual gap was just that shape mismatch: a composed entity's `:sprite`
+  vector already IS the exact primitive vocabulary
+  `kami.sprite-gpu/prims->quads` consumes — no new renderer needed,
+  reusing the same GPU-instanced-quad pipeline network-isekai's games
+  already draw through). `bb render-test` (new task) renders
+  `monsters/compose-slime` through that pipeline in a real headless
+  Chromium/WebGL2 canvas (`kami.playwright`, kotoba-lang/webgpu's own
+  harness, reused verbatim) and `readPixels`s the result, asserting the
+  slime's actual watercolour-green body fill AND its two dark eye-dot
+  sub-primitives are both really on screen — confirmed this
+  discriminates (not another "didn't throw" placeholder) by deliberately
+  breaking the adapter's scene/snap tag agreement (both assertions
+  failed with real numbers: green pixel count 53252→717, eye-dot count
+  967→0) and restoring it (back to 53252/967, exactly reproducing the
+  original numbers). Needs a sibling `kotoba-lang/webgpu` checkout (+
+  its own sibling `kotoba-lang/expr`) next to this repo to run — see
+  `bb.edn`'s `render-test` task doc.
 - **Strengthened the sprite validity gate from shape-checking to numeric
   sanity**: `valid-sprite?` only ever checked "is this a vector of
   `{:circle {}}`-shaped maps" — it would pass a sprite with a negative
