@@ -141,11 +141,40 @@ tensei/transition                              ; {:audio {...} :fx {...}} — th
 standalone `character.edn` files. network-isekai's default Asset Hub
 presets (`isekai.network/assets.html`) are generated this way.
 
+## Render adapter (`kami.isekai.render-adapter`)
+
+This library stays "data only" (see above) but a composed entity's `:sprite` vector already IS
+the exact primitive vocabulary [kotoba-lang/webgpu](https://github.com/kotoba-lang/webgpu)'s
+`kami.sprite-gpu/prims->quads` consumes — the GPU-instanced-quad pipeline network-isekai's games
+already draw every frame through. `kami.isekai.render-adapter` is the small (dependency-free)
+glue for the other side of that pipeline: `kami.scene2d/frame-quads` wants a whole *scene*
+(`{:sprites {tag prims}, ...}`) and a per-frame *snap* (`[{:tag :pos} ...]`), not a single
+composed map.
+
+```clojure
+(require '[kami.isekai.monsters :as monsters]
+         '[kami.isekai.render-adapter :as radapt]
+         '[kami.scene2d :as s2])                        ; kotoba-lang/webgpu, sibling dep
+
+(let [{:keys [scene snap]} (radapt/preset->scene "slime" (monsters/compose-slime))]
+  (s2/frame-quads scene snap [] 0 640 480))
+;; => {:sky {...} :quads [...]}  — pack-instances that straight into a WebGL2/WebGPU draw call
+```
+
+`bb render-test` proves this actually draws real pixels: a real headless-Chromium/WebGL2 canvas
+render of `monsters/compose-slime` through this adapter + `kami.scene2d`/`kami.sprite-gpu`,
+`readPixels`-verified (the slime's green body fill + its two dark eye dots are both checked for
+on screen, not just "compiles"). Needs a sibling `kotoba-lang/webgpu` checkout (+ its own sibling
+`kotoba-lang/expr`, for `kami.wgsl`) next to this repo — see `bb.edn`'s `render-test` task doc for
+the exact layout and why (kami.playwright's bridge script + the GLSL fixtures it reuses are
+read via cwd-relative paths in that repo).
+
 ## Develop
 
 ```bash
 bb test           # data gate: every race × class × monster × skill composes to valid data
 bb gen-presets --out /tmp/isekai-presets
+bb render-test    # pixel-verified GPU render proof (needs sibling kotoba-lang/webgpu + expr checkouts)
 ```
 
 ## License
