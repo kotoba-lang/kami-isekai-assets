@@ -1,0 +1,33 @@
+name: CI
+on:
+  push: { branches: [main] }
+  pull_request:
+jobs:
+  test:
+    # Data gate: every race x class x monster x skill composes to valid kami.sprite2d EDN
+    # (bb.edn's `test` task). This repo has zero runtime deps by design (kami-isekai-assets
+    # stays a pure-EDN library for consumers who don't want the render pipeline), so this job
+    # needs nothing beyond babashka.
+    name: bb test (chargen data gate)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install babashka
+        uses: DeLaGuardo/setup-clojure@13.0
+        with: { bb: 'latest' }
+      - name: bb test — every race/class/monster/skill composes to valid sprite2d data
+        run: bb test
+
+  # NOTE (2026-07-08): bb.edn also defines a `render-test` task (real headless-Chromium WebGL2
+  # pixel verification via kotoba-lang/webgpu's kami.playwright, reusing the sprite-SDF GLSL
+  # fixtures + the same harness as that repo's own playwright_*_test.clj files) -- but that task
+  # only exists on the still-open `feat/render-adapter-poc` PR (#1), not yet on `main`, so it is
+  # deliberately NOT wired into this workflow yet. It has been separately verified runnable on a
+  # real ubuntu-latest GitHub Actions runner once two things are true: (1) that PR is merged, and
+  # (2) kotoba-lang/webgpu's own kami.playwright bridge has a cross-platform (not macOS-only)
+  # chromium resolution -- see kotoba-lang/webgpu#9, which fixes exactly that and itself went
+  # green on ubuntu-latest. Once #1 merges here, add a `render-verify` job mirroring that PR's
+  # `render-verify` job: checkout this repo + sibling kotoba-lang/webgpu + ITS sibling
+  # kotoba-lang/expr (the same orgs/kotoba-lang/{kami-isekai-assets,webgpu,expr} layout the
+  # west-managed superproject already uses), npm ci + `npx playwright install chromium` inside
+  # the webgpu checkout, then `bb render-test` from this repo.
