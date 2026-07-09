@@ -3,4 +3,9 @@
 ;; Consumers add this via :local/root or a git dep and put `kami.isekai.*` on
 ;; their classpath / shadow-cljs source path.
 {:paths ["src"]
- :deps  {}}
+ :deps  {}
+ :aliases
+ {;; clj-kondo as a Clojars lib (no Homebrew/system install needed).
+  :lint {:replace-deps {clj-kondo/clj-kondo {:mvn/version "2024.11.14"}}
+         :main-opts ["-m" "clj-kondo.main" "--lint" "src"
+                     "--fail-level" "error"]}}}

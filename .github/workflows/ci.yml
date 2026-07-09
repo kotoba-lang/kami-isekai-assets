@@ -12,11 +12,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install babashka
+      - name: Install babashka + Clojure CLI
         uses: DeLaGuardo/setup-clojure@13.0
-        with: { bb: 'latest' }
+        with: { bb: 'latest', cli: 'latest' }
       - name: bb test — every race/class/monster/skill composes to valid sprite2d data
         run: bb test
+      - name: clj-kondo lint
+        run: clojure -M:lint
 
   render-verify:
     # Real-pixel headless-WebGL2 verification (bb.edn's `render-test` task, via kotoba-lang/webgpu's
