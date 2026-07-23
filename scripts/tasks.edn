@@ -1,3 +1,39 @@
-;; Auto-generated from bb.edn (ADR-2607173000).
+;; Auto-generated from bb.edn (ADR-2607173000). Two entries below (`:test`, `:render-test`) were
+;; hand-ported from scripts/tasks-complex.edn's backlog after bb.edn's removal broke CI (`bb test`/
+;; `bb render-test` had nothing left to resolve them) — see that file's remaining `:gen-presets`
+;; entry for what's still unported.
 ;; nbb scripts/run-task.cljs <task> [args…]
-{}
+{:test
+ ;; Data gate: every race × class × monster × skill composes to valid kami.sprite2d data.
+ ;; test/chargen_test.cljc is a plain ns-less script (no (ns ...) form, no clojure.test) —
+ ;; it's designed to be executed top-to-bottom, not required as a namespace, so it's passed
+ ;; directly as nbb's script argument (nbb runs a .cljc file as a script the same way it runs
+ ;; .cljs) rather than via `-e "(load-file ...)"` (a bb/JVM-ism nbb doesn't have).
+ {:cmd ["nbb" "--classpath" "src:test" "test/chargen_test.cljc"]}
+
+ :render-test
+ ;; Pixel-verified proof (real headless-Chromium WebGL2 readPixels) that a composed preset
+ ;; actually draws — see test/render_pixel_test.clj's own header comment for the full story.
+ ;; Left on `bb` (not ported to nbb) on purpose: this test's dependencies (kotoba-lang/playwright's
+ ;; bridge + cheshire.core for JSON) are JVM-only, matching this repo's runtime priority policy
+ ;; that pre-existing JVM-only code isn't retroactively rewritten just because a higher-priority
+ ;; runtime now exists — `bb` itself still works standalone (only bb.edn, the config file, was
+ ;; retired), so this just replicates bb.edn's old task as a direct invocation.
+ ;;
+ ;; The classpath here is NOT what the old bb.edn task (or this file's own comment before this
+ ;; fix) said: kami.playwright/kami.scene2d/kami.sprite-gpu have each since been split out of
+ ;; kotoba-lang/webgpu into their own sibling repos, each pulling in further siblings transitively
+ ;; (kami.scene2d → kami.sprite2d.layout in kotoba-lang/sprite2d; kami.sprite-gpu → kami.wgsl in
+ ;; kotoba-lang/wgsl → kotoba.expr in kotoba-lang/expr) — the OLD 3-dir classpath
+ ;; ("../kami-isekai-assets/src:src:../expr/src") silently no longer resolves most of these at all;
+ ;; found by actually running this task after the port and following each FileNotFoundException
+ ;; one require at a time, not by trusting the stale doc or assuming webgpu's full ~20-sibling
+ ;; deps.edn graph is needed (it isn't — kami.text/kami.sprite2d.layout are the only two further
+ ;; hops, and both are leaf namespaces beyond clojure.string). Still runs with :dir set to the
+ ;; webgpu sibling (kept a local copy of kami.playwright's bridge script `scripts/pw_eval.cjs` and
+ ;; the sprite-SDF GLSL fixtures under `fixtures/glsl/`, both read via cwd-relative paths, from
+ ;; before the split — matching every OTHER playwright_*_test.clj in that repo).
+ ;; Sibling-checkout layout needed: orgs/kotoba-lang/{kami-isekai-assets,webgpu,playwright,scene2d,
+ ;; sprite-gpu,sprite2d,wgsl,expr}.
+ {:cmd ["sh" "-c"
+        "cd ../webgpu && exec bb --classpath \"../kami-isekai-assets/src:src:../playwright/src:../scene2d/src:../sprite-gpu/src:../sprite2d/src:../wgsl/src:../expr/src\" -f \"$OLDPWD/test/render_pixel_test.clj\""]}}
