@@ -2,6 +2,31 @@
 
 ## Unreleased
 
+- **A third palette variant (`:pixel8`) and a walk-cycle motion helper — a new recolour + a new
+  procedural animation, not a raster sprite-sheet renderer.** `kami.isekai.palette/pixel8`
+  quantizes any `[r g b]` to its nearest-neighbour swatch in a small fixed 24-colour palette
+  (`pixel8-swatches`) sized in the same ballpark as an 8-bit-era console's simultaneous on-screen
+  colour count — real nearest-colour palette mapping, not per-channel posterization (which was
+  tried mentally and rejected: rounding each channel independently can still land on thousands of
+  muddy/off-hue combinations no curated retro palette would ever ship, since each channel is
+  quantized blind to what the other two are doing). Wired into `compose-character` as
+  `:variant :pixel8` alongside `:watercolor`/`:brainrot`. Separately, `kami.isekai.chargen/walk-cycle`
+  adds a walking-in-place motion on top of an already-composed `:sprite` — idle breathing already
+  existed by default (the head's `:pulse [0.04 2.0]`), so this closes the other actual gap: a torso
+  `:bob` at a faster cadence than that idle breathing, plus a desynced `:sway` on every other
+  not-already-animated primitive (accessories, race tells, equipment) so they don't move in exact
+  lockstep with the torso. Both effects are `kami.sprite2d`'s existing `:bob`/`:sway` keys (see
+  `orgs/kotoba-lang/sprite2d`'s `prim!`) — no new renderer-side work, no new `:anim` vocabulary.
+  `walk-cycle` has to find the torso by scanning for the first primitive without a pre-existing
+  `:anim` rather than hardcoding `sprite[0]`, because `cheat-aura` prepends two already-`:pulse`'d
+  halo circles in front of the torso when `:cheat? true` — hardcoding the index would have given
+  the halo a `:bob` and left the actual body motionless. New preset `pixel8-op-protagonist`
+  (same base character as `op-protagonist`/`op-protagonist-brainrot` — just `:variant :pixel8`
+  piped through `walk-cycle`) demonstrates both together, the same before/after role
+  `op-protagonist-brainrot` plays for `brainrot`. This is a recolour of the same vector-primitive
+  silhouette and a continuous procedural tween, not literal pixel-art/dot-matrix raster imagery or
+  a discrete frame-by-frame sprite sheet — this library still emits zero PNG/GLB/WAV files by
+  design (see "Why no real images" above).
 - **Second render-adapter case: a real composed PARTY (not just one monster), and a genuine
   formation-clearance bug the first round's world-unit-only math couldn't see.** The first render
   pass (below) only ever proved `render-adapter/preset->scene` (ONE entity, `compose-slime`).

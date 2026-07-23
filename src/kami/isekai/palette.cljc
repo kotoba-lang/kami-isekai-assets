@@ -4,7 +4,12 @@
    Profile / FFT era): desaturated, paper-lifted watercolour tones rather than
    saturated cartoon primaries — low-poly-as-craft, not low-poly-as-cheap.
    `brainrot` is an explicit opt-in loud/saturated remix for callers who want
-   the current internet-meme register instead; it is never applied by default.")
+   the current internet-meme register instead; it is never applied by default.
+   `pixel8` is a third opt-in variant: a genuine nearest-swatch palette
+   quantization down to a small fixed retro-console-scale colour set, for
+   callers who want an 8-bit read on the same vector-primitive silhouette
+   (still no raster/dot-matrix imagery — see the ns docstring in chargen.cljc
+   on why this repo never emits real pixel art).")
 
 ;; paper-lifted watercolour: desaturate toward a warm cream, then lift value a
 ;; touch — the same trick a watercolourist uses so pigment reads as painted on
@@ -30,6 +35,39 @@
   (let [mean  (/ (+ r g b) 3.0)
         boost (fn [c] (max 0.0 (min 1.0 (+ (* (- c mean) 1.9) mean))))]
     (mapv boost [r g b])))
+
+;; A small fixed retro palette, in the rough size band real 8-bit-era hardware
+;; worked with (the NES's simultaneous on-screen palette tops out at 25 slots
+;; incl. background; the Game Boy shipped 4-shade monochrome and later
+;; 4-colour tiles from a larger master palette) — 24 swatches, spread across
+;; neutrals, warm/cool hues, and light/dark bands so skin/hair/garment tones
+;; still land distinctly after quantization instead of collapsing onto a
+;; handful of samey mid-tones.
+(def pixel8-swatches
+  [[0.04 0.04 0.06] [0.11 0.14 0.29] [0.30 0.13 0.35] [0.05 0.30 0.24]
+   [0.55 0.30 0.20] [0.30 0.28 0.26] [0.68 0.68 0.70] [0.94 0.92 0.86]
+   [0.80 0.06 0.20] [0.95 0.55 0.10] [0.95 0.85 0.16] [0.10 0.75 0.20]
+   [0.10 0.55 0.85] [0.32 0.28 0.48] [0.90 0.42 0.55] [0.92 0.72 0.55]
+   [0.10 0.55 0.55] [0.45 0.48 0.15] [0.42 0.10 0.16] [0.72 0.58 0.40]
+   [0.55 0.75 0.90] [0.55 0.85 0.20] [0.75 0.15 0.65] [0.34 0.40 0.46]])
+
+;; opt-in 8-bit remix (see ns docstring) — snaps the input RGB to its nearest
+;; neighbour (least squared distance, in RGB space) in `pixel8-swatches`.
+;; This is genuine palette QUANTIZATION, not per-channel posterization.
+;; Posterizing each channel independently (e.g. rounding each of r/g/b to the
+;; nearest of 4 evenly-spaced steps) does NOT read as a curated retro palette
+;; — it still produces thousands of combinations, many of them muddy or a hue
+;; no real limited-palette console would ever ship, because each channel is
+;; quantized blind to what the other two are doing. Snapping the whole triple
+;; to the closest entry in a small hand-picked list instead guarantees every
+;; output colour is one of a small, intentionally-chosen set — the same
+;; nearest-colour palette-mapping technique actual 8-bit-era art tools and
+;; NES/Game-Boy pixel-art converters use.
+(defn pixel8
+  [[r g b]]
+  (letfn [(sq [x] (* x x))
+          (dist2 [[sr sg sb]] (+ (sq (- r sr)) (sq (- g sg)) (sq (- b sb))))]
+    (apply min-key dist2 pixel8-swatches)))
 
 ;; per-race base hues (skin/hide, hair/mane-or-accent, garment) — muted before
 ;; watercolor/brainrot is applied on top by the caller.

@@ -71,8 +71,49 @@
           [:circle {:dx 0 :dy 0 :r (* 175 scale) :fill [1.0 0.92 0.55 0.22] :anim {:pulse [0.14 1.5]}}]]
          sprite)))
 
+(defn walk-cycle
+  "Layers a walking-in-place motion onto an already-composed :sprite vector,
+   using ONLY the :bob/:sway keys kami.sprite2d's real :anim interpreter
+   already understands (see orgs/kotoba-lang/sprite2d's kami.sprite2d/prim!)
+   — no new :anim keys invented here, so this is drawn correctly by the
+   existing renderer with zero renderer-side changes.
+
+   The torso primitive is normally sprite[0] (compose-character's body
+   vector starts [torso head ...]) — but when the caller composed with
+   :cheat? true, cheat-aura has already PREPENDED two already-:anim'd (:pulse)
+   halo circles in front of it, so the torso is no longer at a fixed index.
+   Rather than hardcode index 0 and get this wrong for cheat characters,
+   walk-cycle finds the first primitive that doesn't already carry an :anim
+   — that's the torso whether or not an aura sits in front of it — and gives
+   IT a vertical :bob (a stride's up-down bounce) at a walking cadence
+   noticeably faster than the idle head :pulse [0.04 2.0] breathing rate, so
+   the two read as genuinely different motions instead of the same wobble at
+   a different amplitude. Every OTHER primitive that doesn't already carry
+   its own :anim (accessories, race-accent tells, equipment) gets a small
+   horizontal :sway at a different phase/frequency than the torso's bob, so
+   accessories don't move in exact lockstep with the torso — a real walk has
+   limbs/accessories swinging out of phase with the body, not one rigid
+   silhouette translating up and down as a unit. Anything that already had
+   its own :anim (the head's breathing :pulse, a cheat-aura halo, a
+   holy-symbol glow, ...) is left exactly as it was — walk-cycle only fills
+   in gaps, it doesn't override existing motion.
+
+   Composable like cheat-aura: takes a sprite vector, returns a sprite
+   vector, so callers pipe it in after compose-character (`(update
+   (compose-character ...) :sprite walk-cycle)`)."
+  ([sprite] (walk-cycle sprite 1.0))
+  ([sprite scale]
+   (let [torso-i (or (first (keep-indexed (fn [i [_ o]] (when-not (:anim o) i)) sprite)) 0)]
+     (vec (map-indexed
+            (fn [i [kind o]]
+              (cond
+                (= i torso-i) [kind (assoc o :anim {:bob [(* 8 scale) 4.8]})]
+                (:anim o)     [kind o]
+                :else         [kind (assoc o :anim {:sway [(* 4 scale) 4.2]})]))
+            sprite)))))
+
 (defn compose-character
-  "{:race kw :class kw :seed int? :cheat? bool? :variant :watercolor|:brainrot
+  "{:race kw :class kw :seed int? :cheat? bool? :variant :watercolor|:brainrot|:pixel8
     :equip? bool?}
    → {:sprite [...primitives...] :render/profile {...} :tags [...]}.
 
@@ -85,7 +126,7 @@
         cl        (classes/class class)
         hues      (get pal/race-hues race (:human pal/race-hues))
         class-hue (get-in pal/class-hues [class :accent] (:garment hues))
-        tone      (case variant :brainrot pal/brainrot pal/watercolor)
+        tone      (case variant :brainrot pal/brainrot :pixel8 pal/pixel8 pal/watercolor)
         skin      (-> (:skin hues) tone (pal/jitter-color seed))
         accent    (-> class-hue tone)
         stature   (:stature rc 1.0)
