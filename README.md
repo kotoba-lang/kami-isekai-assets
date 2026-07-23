@@ -29,6 +29,14 @@ of primitives reading as a whole silhouette rather than an illustration.
 `kami.isekai.palette/brainrot` is an explicit **opt-in** loud/saturated remix
 for the rare case you want the current internet-meme register instead — it
 is never applied unless you ask for `:variant :brainrot`.
+`kami.isekai.palette/pixel8` is a third opt-in variant: nearest-swatch
+quantization down to a small fixed 24-colour retro palette, for an 8-bit
+recolour of the same silhouette (`:variant :pixel8`) — still composed
+primitives, not raster pixel art (see above). Pair it with
+`kami.isekai.chargen/walk-cycle` (a torso `:bob` + desynced accessory `:sway`,
+piped through `(update (compose-character ...) :sprite walk-cycle)`) for a
+walking-in-place motion; idle characters already breathe via the head's
+`:pulse` by default.
 
 ## Usage
 

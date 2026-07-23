@@ -144,6 +144,69 @@
                    (> (saturation (pal/brainrot (:skin hues))) (saturation (pal/watercolor (:skin hues)))))
                  pal/race-hues)))
 
+(check "pal/pixel8 actually quantizes — feeding it several distinct input colours yields values drawn from the
+        small fixed pixel8-swatches set (not a no-op passthrough, and not some other unrelated recolour)"
+       (let [inputs [[0.86 0.72 0.60] [0.30 0.20 0.14] [0.34 0.30 0.46] [0.88 0.80 0.68]
+                     [0.20 0.60 0.90] [0.05 0.05 0.05] [0.95 0.95 0.95] [0.62 0.48 0.38]]
+             outputs (map pal/pixel8 inputs)]
+         (and (every? (set pal/pixel8-swatches) outputs)
+              (>= (count (distinct outputs)) 3))))
+
+(check "pal/pixel8 is idempotent — quantizing an already-quantized swatch returns that same swatch (each swatch
+        is its own nearest neighbour), otherwise this wouldn't be a stable palette mapping"
+       (every? (fn [s] (= s (pal/pixel8 s))) pal/pixel8-swatches))
+
+(check "compose-character's :pixel8 variant produces a genuinely different (quantized) garment colour than
+        :watercolor for the same race/class/seed — this is a real recolour, not a variant key that's ignored.
+        (Checked on the torso/garment fill, not the head/skin fill — the skin fill goes through
+        pal/jitter-color AFTER tone is applied, so it's deliberately nudged off-swatch by seeded jitter;
+        the garment fill isn't jittered, so it lands exactly on a pixel8 swatch.)"
+       (let [wc (chargen/compose-character {:race :orc :class :knight :seed 5 :variant :watercolor})
+             px (chargen/compose-character {:race :orc :class :knight :seed 5 :variant :pixel8})]
+         (and (not= wc px)
+              (contains? (set pal/pixel8-swatches) (vec (take 3 (get-in px [:sprite 0 1 :fill])))))))
+
+(check "chargen/walk-cycle adds exactly one torso :bob (sprite[0], no cheat aura in front of it here) and a
+        :sway to every other not-already-animated primitive, while leaving primitive count/order/shape
+        otherwise untouched — the sprite must still pass the exact same valid-sprite?/sane-prim? gates as
+        before walk-cycle ran"
+       (let [base    (chargen/compose-character {:race :human :class :adventurer :seed 999})
+             walking (update base :sprite chargen/walk-cycle)]
+         (and (= (count (:sprite base)) (count (:sprite walking)))
+              (sane-sprite? (:sprite walking))
+              (some? (get-in (:sprite walking) [0 1 :anim :bob]))
+              ;; every primitive beyond the torso either kept its own pre-existing :anim
+              ;; (e.g. the head's :pulse) or gained a fresh :sway from walk-cycle
+              (every? (fn [i]
+                        (let [orig-anim (get-in base [:sprite i 1 :anim])
+                              new-anim  (get-in walking [:sprite i 1 :anim])]
+                          (if orig-anim
+                            (= orig-anim new-anim)
+                            (some? (:sway new-anim)))))
+                      (range 1 (count (:sprite base)))))))
+
+(check "walk-cycle finds the REAL torso even when cheat-aura already prepended two already-:anim'd (:pulse)
+        halo circles in front of it — it must not mistake the aura for the torso and give the halo a :bob
+        while leaving the actual body un-animated"
+       (let [base    (chargen/compose-character {:race :human :class :adventurer :seed 999 :cheat? true})
+             walking (update base :sprite chargen/walk-cycle)
+             anims   (map (fn [[_ o]] (:anim o)) (:sprite walking))]
+         (and (= (count (:sprite base)) (count (:sprite walking)))
+              (sane-sprite? (:sprite walking))
+              ;; the two cheat-aura halo circles kept their original :pulse, untouched by walk-cycle
+              (= (get-in base [:sprite 0 1 :anim]) (get-in walking [:sprite 0 1 :anim]))
+              (= (get-in base [:sprite 1 1 :anim]) (get-in walking [:sprite 1 1 :anim]))
+              ;; exactly one primitive in the whole sprite carries the new :bob, and it's not either halo
+              (= 1 (count (filter #(:bob %) anims)))
+              (not (:bob (nth anims 0))) (not (:bob (nth anims 1))))))
+
+(check "walk-cycle's torso :bob is a strictly faster cadence than the idle head :pulse [0.04 2.0] — a walk
+        should read as visibly quicker than idle breathing, not the same rate"
+       (let [walking (update (chargen/compose-character {:race :human :class :adventurer :seed 1}) :sprite chargen/walk-cycle)
+             [_ bob-freq] (get-in walking [:sprite 0 1 :anim :bob])
+             [_ pulse-freq] (get-in walking [:sprite 1 1 :anim :pulse])]
+         (> bob-freq pulse-freq)))
+
 (def monster-composers
   [#(monsters/compose-slime) #(monsters/compose-goblin-raider {:seed 1})
    #(monsters/compose-orc-brute {:seed 1}) #(monsters/compose-dragon {:seed 1})

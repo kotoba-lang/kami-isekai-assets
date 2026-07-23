@@ -37,6 +37,13 @@
        ;; before/after pairing demonstrating what the opt-in loud palette actually looks like.
        {:id "op-protagonist-brainrot"
         :compose #(chargen/compose-character {:race :human :class :adventurer :seed 999 :cheat? true :variant :brainrot})}
+       ;; palette/pixel8 (quantized retro palette, palette.cljc) + chargen/walk-cycle (torso
+       ;; :bob + desynced accessory :sway, chargen.cljc) — same base character as
+       ;; op-protagonist/-brainrot again, so this one preset demonstrates both new features
+       ;; together, the same before/after-pairing role op-protagonist-brainrot plays for brainrot.
+       {:id "pixel8-op-protagonist"
+        :compose #(update (chargen/compose-character {:race :human :class :adventurer :seed 999 :cheat? true :variant :pixel8})
+                           :sprite chargen/walk-cycle)}
        {:id "slime" :compose monsters/compose-slime}
        {:id "slime-fire" :compose monsters/compose-slime-fire}
        {:id "slime-ice" :compose monsters/compose-slime-ice}
