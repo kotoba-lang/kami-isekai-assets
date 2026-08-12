@@ -140,14 +140,22 @@ tensei/transition                              ; {:audio {...} :fx {...}} — th
   a plain-data snapshot of the whole catalog's size.
 
 - **Presets** (`kami.isekai.presets`) — `presets`, the single curated list
-  (a representative slice, not every combination) that both `bb gen-presets`
-  and network-isekai's Asset Hub deploy script consume directly — the one
+  (a representative slice, not every combination) that both the `gen-presets`
+  script and network-isekai's Asset Hub deploy script consume directly — the one
   place this list is defined, so it can't fall out of sync with itself the
   way it already did once (see CHANGELOG).
 
-`bb gen-presets --out <dir>` writes `kami.isekai.presets/presets` as
-standalone `character.edn` files. network-isekai's default Asset Hub
-presets (`isekai.network/assets.html`) are generated this way.
+`gen-presets` writes `kami.isekai.presets/presets` as standalone
+`character.edn` files. network-isekai's default Asset Hub presets
+(`isekai.network/assets.html`) are generated this way.
+
+> **`gen-presets` is currently unavailable as a task.** It was
+> `bb gen-presets --out <dir>`; babashka was retired as this workspace's script
+> host by ADR-2607173000 and the conversion could not express its
+> `(load-file "scripts/gen_presets.clj")` body, so it was dropped
+> (ADR-2608131600). The recovered form is in `scripts/tasks-complex.edn` and the
+> script itself is still at `scripts/gen_presets.clj`; restoring it is a port,
+> not a conversion.
 
 ## Render adapter (`kami.isekai.render-adapter`)
 
@@ -169,21 +177,30 @@ composed map.
 ;; => {:sky {...} :quads [...]}  — pack-instances that straight into a WebGL2/WebGPU draw call
 ```
 
-`bb render-test` proves this actually draws real pixels: a real headless-Chromium/WebGL2 canvas
+`nbb scripts/run-task.cljs render-test` proves this actually draws real pixels: a real headless-Chromium/WebGL2 canvas
 render of `monsters/compose-slime` through this adapter + `kami.scene2d`/`kami.sprite-gpu`,
 `readPixels`-verified (the slime's green body fill + its two dark eye dots are both checked for
 on screen, not just "compiles"). Needs a sibling `kotoba-lang/webgpu` checkout (+ its own sibling
-`kotoba-lang/expr`, for `kami.wgsl`) next to this repo — see `bb.edn`'s `render-test` task doc for
-the exact layout and why (kami.playwright's bridge script + the GLSL fixtures it reuses are
+`kotoba-lang/expr`, for `kami.wgsl`) next to this repo — see the `:render-test` entry in
+`scripts/tasks.edn` for the exact layout and why (kami.playwright's bridge script + the GLSL fixtures it reuses are
 read via cwd-relative paths in that repo).
 
 ## Develop
 
 ```bash
-bb test           # data gate: every race × class × monster × skill composes to valid data
-bb gen-presets --out /tmp/isekai-presets
-bb render-test    # pixel-verified GPU render proof (needs sibling kotoba-lang/webgpu + expr checkouts)
+nbb scripts/run-task.cljs test           # data gate: every race × class × monster × skill composes to valid data
+nbb scripts/run-task.cljs render-test    # pixel-verified GPU render proof (see caveat below)
 ```
+
+Two caveats, both a consequence of babashka's retirement (ADR-2607173000):
+
+- **`gen-presets` is unavailable** — see the Presets section above.
+- **`render-test` is registered, but its `:cmd` still shells out to `bb`.** So
+  it runs only where babashka happens to be installed, and not on a murakumo
+  fleet node. `scripts/tasks.edn` says why it was left that way (the test's
+  playwright + cheshire dependencies are JVM-only); the consequence is that the
+  task resolves but is not portable, which is a different failure from the
+  dropped `gen-presets` and is worth knowing before you rely on it in CI.
 
 ## License
 
