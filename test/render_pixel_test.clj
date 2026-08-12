@@ -15,12 +15,18 @@
 ;; This is a .clj (not .cljc) test on purpose: `kami.playwright`/`kami.scene2d`/`kami.sprite-gpu`
 ;; live in the sibling kotoba-lang/webgpu repo, not this repo's own deps.edn (kami-isekai-assets
 ;; stays a pure-EDN library with zero deps for everyone who doesn't want the render pipeline).
-;; Run via `bb render-test` (this repo's bb.edn) — that task shells out with the working
-;; directory set to a sibling kotoba-lang/webgpu checkout, because kami.playwright's bridge
-;; script and the GLSL fixtures below are read via cwd-relative paths (matching every other
-;; playwright_*_test.clj in that repo) — see bb.edn's `render-test` task doc for the exact
-;; sibling-checkout layout this expects (kotoba-lang/{kami-isekai-assets,webgpu,expr} as
-;; siblings, the same layout the west-managed superproject already checks these repos out in).
+;; Run via `nbb scripts/run-task.cljs render-test` — that task runs with the working directory set
+;; to a sibling kotoba-lang/webgpu checkout, because kami.playwright's bridge script and the GLSL
+;; fixtures below are read via cwd-relative paths (matching every other playwright_*_test.clj in
+;; that repo) — see scripts/tasks.edn's `:render-test` doc for the exact sibling-checkout layout
+;; this expects, and for the two dependencies (babashka.process, cheshire) that were never declared
+;; anywhere because babashka bundled them (ADR-2608135000).
+;;
+;; KNOWN RED, and deliberately not silenced: the protagonist-aura assertion below samples
+;; [255 255 176] against a pinned [255 255 193] ±12. Measured identically under the retired `bb`
+;; command, so it predates the port; likely from 4ce4469 (:pixel8 palette + walk-cycle motion,
+;; 2026-07-23) landing after the pin was recorded (5d8d208, 2026-07-08), inside the window in which
+;; this task could not be run at all.
 (ns render-pixel-test
   (:require [clojure.test :refer [deftest is run-tests]]
             [kami.playwright :as pw]
@@ -116,7 +122,7 @@
 ;; pixel-exact inter-member clearance/background gaps (that would be testing kami.sprite-gpu's
 ;; sizing, not this repo's render-adapter) — the party.cljc formation fix + chargen_test.cljc's
 ;; corrected clearance check (both in THIS repo, both about world-unit/Canvas2D-semantics
-;; geometry) are verified at the unit level (`bb test`), independent of this GPU-side gap.
+;; geometry) are verified at the unit level (`nbb scripts/run-task.cljs test`), independent of this GPU-side gap.
 (def party-members (party/compose-party party/starter-party))
 
 ;; entity centres at k=1, W=H=1000 (sx = 500+x, sy = 500-y — world +y is screen up, see

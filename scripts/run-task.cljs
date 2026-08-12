@@ -8,9 +8,21 @@
 (def path (js/require "node:path"))
 (def cp (js/require "node:child_process"))
 
-(defn- sh [argv]
-  (let [r (.spawnSync cp (first argv) (to-array (rest argv))
-                      #js {:encoding "utf8" :stdio "inherit" :shell false})]
+;; `dir`, when present, is the child's working directory, resolved relative to the REPO ROOT
+;; (this file's parent's parent) rather than to wherever the caller happened to be standing --
+;; otherwise `nbb scripts/run-task.cljs render-test` would mean something different depending on
+;; the shell's cwd, which is exactly the class of hidden coupling this repo has already been bitten
+;; by. It exists so a task can run in a sibling checkout WITHOUT `sh -c "cd … && exec …"`:
+;; spawning a shell to change directory both re-introduces a shell (which this workspace's nbb-only
+;; script policy avoids) and hides the real argv from anything that reads tasks.edn -- including the
+;; babashka-facade detector, which only inspects (first (:cmd t)) and so read "sh" and saw nothing
+;; wrong while a `bb` sat inside the string (ADR-2608135000).
+(defn- sh [argv dir]
+  (let [repo-root (.resolve path (.dirname path *file*) "..")
+        cwd (when dir (.resolve path repo-root dir))
+        r (.spawnSync cp (first argv) (to-array (rest argv))
+                      (cond-> #js {:encoding "utf8" :stdio "inherit" :shell false}
+                        cwd (doto (aset "cwd" cwd))))]
     ;; A child that never started, and one killed by a signal, BOTH report
     ;; status:null and land on the synthetic exit 1 -- with nothing printed,
     ;; because stdio is inherited and there was no child to write anything.
@@ -47,7 +59,7 @@
       (let [argv (if (:pass-args? t)
                    (into (vec (:cmd t)) rest-args)
                    (vec (:cmd t)))]
-        (sh argv))
+        (sh argv (:dir t)))
       :else
       (do (js/console.error "bad task entry" task t)
           (.exit js/process 2)))))
