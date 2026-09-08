@@ -12,7 +12,7 @@
          '[kami.isekai.catalog :as catalog]
          '[kami.isekai.palette :as pal]
          '[kami.isekai.presets :as presets]
-         '[clojure.string :as str])
+         '[kotoba.lang.text :as str])
 
 (def prim-kinds #{:circle :rect :ellipse :arc})
 
