@@ -28,7 +28,7 @@
 ;; 2026-07-23) landing after the pin was recorded (5d8d208, 2026-07-08), inside the window in which
 ;; this task could not be run at all.
 (ns render-pixel-test
-  (:require [clojure.test :refer [deftest is run-tests]]
+  (:require [kotoba.lang.text] [clojure.test :refer [deftest is run-tests]]
             [kami.playwright :as pw]
             [kami.scene2d :as s2]
             [kami.sprite-gpu :as sg]
@@ -152,7 +152,7 @@
                 "const b=new Uint8Array(W*H*4);gl.readPixels(0,0,W,H,gl.RGBA,gl.UNSIGNED_BYTE,b);"
                 "function px(x,y){const i=(y*W+x)*4;return [b[i],b[i+1],b[i+2],b[i+3]];}"
                 "return {n:N, px:{"
-                (clojure.string/join "," (map (fn [[k [x y]]] (str "\"" (name k) "\":px(" (int x) "," (int y) ")")) samples))
+                (kotoba.lang.text/join "," (map (fn [[k [x y]]] (str "\"" (name k) "\":px(" (int x) "," (int y) ")")) samples))
                 "}};")]
     (pw/eval-page js)))
 
