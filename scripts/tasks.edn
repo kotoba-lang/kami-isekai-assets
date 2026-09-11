@@ -1,7 +1,7 @@
-;; Task registry for `nbb scripts/run-task.cljk <task> [args…]` (ADR-2607173000).
+;; Task registry for `kbb --backend sci scripts/run-task.cljk <task> [args…]` (ADR-2607173000).
 ;;
 ;; Originally auto-generated from bb.edn; `:test` and `:render-test` were hand-ported afterwards
-;; because bb.edn's removal left `bb test` / `bb render-test` with nothing to resolve them. See
+;; because bb.edn's removal left `kbb -M:test` / `kbb -M:render-test` with nothing to resolve them. See
 ;; scripts/tasks-complex.edn's remaining `:gen-presets` entry for what is still unported.
 ;;
 ;; `:render-test` was ported off `bb` for real in ADR-2608135000. It had been left as
@@ -15,7 +15,7 @@
  ;; it's designed to be executed top-to-bottom, not required as a namespace, so it's passed
  ;; directly as nbb's script argument (nbb runs a .cljc file as a script the same way it runs
  ;; .cljs) rather than via `-e "(load-file ...)"` (a bb/JVM-ism nbb doesn't have).
- {:cmd ["nbb" "--classpath" "src:test" "test/chargen_test.cljk"]}
+ {:cmd ["kbb" "--backend" "sci" "--classpath" "src:test" "test/chargen_test.cljk"]}
 
  :render-test
  ;; Pixel-verified proof (real headless-Chromium WebGL2 readPixels) that a composed preset
@@ -52,6 +52,6 @@
  ;; Sibling-checkout layout needed: orgs/kotoba-lang/{kami-isekai-assets,webgpu,playwright,scene2d,
  ;; sprite-gpu,sprite2d,wgsl,expr} — the layout west already checks these out in.
  {:dir "../webgpu"
-  :cmd ["clojure" "-Sdeps"
+  :cmd ["kbb" "-Sdeps"
         "{:aliases {:isekai-render-test {:replace-paths [\"../kami-isekai-assets/src\" \"src\" \"../playwright/src\" \"../scene2d/src\" \"../sprite-gpu/src\" \"../sprite2d/src\" \"../wgsl/src\" \"../expr/src\"] :replace-deps {org.clojure/clojure {:mvn/version \"1.12.0\"} cheshire/cheshire {:mvn/version \"5.13.0\"} babashka/process {:mvn/version \"0.5.22\"}} :main-opts [\"../kami-isekai-assets/test/render_pixel_test.cljk\"]}}}"
         "-M:isekai-render-test"]}}
