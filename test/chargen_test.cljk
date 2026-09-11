@@ -410,7 +410,7 @@
        ;; 2026-07-08: this check used to use a single dx-only scalar 'footprint' (max over primitives of
        ;; |:dx| + own-radius) compared against straight-line offset distance. That formula is BLIND to :dy —
        ;; it silently ignored any primitive offset vertically from the entity centre. Real GPU pixel rendering
-       ;; of starter-party (test/render_pixel_test.clj) found an actual on-screen overlap the old formula
+       ;; of starter-party (test/render_pixel_test.cljk) found an actual on-screen overlap the old formula
        ;; missed entirely: chargen's mage `:cloak` accessory hangs DOWN via :dy (not :dx), so its true reach
        ;; was invisible to a dx-only check. Fixed by projecting each primitive onto the ACTUAL axis between
        ;; the two slots being compared (a standard separating-axis-style projection — exact for the
@@ -446,7 +446,7 @@
 
 (check "kami.isekai.presets/presets — the single list bb gen-presets AND network-isekai's deploy script both consume —
         has unique ids and every entry composes to a valid sprite (this is the fix for the actual drift found this
-        round: scripts/gen_presets.clj had its own hardcoded copy that fell behind for a dozen rounds)"
+        round: scripts/gen_presets.cljk had its own hardcoded copy that fell behind for a dozen rounds)"
        (and (= (count presets/presets) (count (distinct (map :id presets/presets))))
             (every? (fn [{:keys [compose]}] (valid-sprite? (:sprite (compose)))) presets/presets)))
 

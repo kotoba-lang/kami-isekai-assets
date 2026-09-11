@@ -52,7 +52,7 @@
 ;; OMITTED key and an explicit `[]` both no-op the same way (get ... [])
 ;; below, but omitting one is indistinguishable from forgetting it (this
 ;; already happened once in kami.isekai.status, see that file's docstring).
-;; test/chargen_test.cljc asserts this map's keys match the full class set.
+;; test/chargen_test.cljk asserts this map's keys match the full class set.
 (def class->weapons
   {:knight       [:sword :shield]
    :mage         [:staff]
