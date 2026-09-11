@@ -43,7 +43,7 @@
   axis-aligned circle/ellipse/rect/arc primitives) instead of one direction-blind scalar — it now
   correctly flags the old starter-party formation as 54.5 world-units short on that pair — and
   rescaled `kami.isekai.party`'s 4-slot formation ~1.25x to restore real clearance on every pair
-  (verified both by the corrected math via `bb test`, and by re-rendering the real party:
+  (verified both by the corrected math via `kbb -M:test`, and by re-rendering the real party:
   `test/render_pixel_test.cljk`'s new `starter-party-renders-real-pixels` samples each of the 4
   members' own distinctive on-screen feature — the protagonist's cheat-aura, the mage's staff
   orb, the knight's shield, the rogue's dagger blade — at the exact screen position its own
@@ -74,7 +74,7 @@
   vector already IS the exact primitive vocabulary
   `kami.sprite-gpu/prims->quads` consumes — no new renderer needed,
   reusing the same GPU-instanced-quad pipeline network-isekai's games
-  already draw through). `bb render-test` (new task) renders
+  already draw through). `kbb -M:render-test` (new task) renders
   `monsters/compose-slime` through that pipeline in a real headless
   Chromium/WebGL2 canvas (`kami.playwright`, kotoba-lang/webgpu's own
   harness, reused verbatim) and `readPixels`s the result, asserting the
@@ -101,7 +101,7 @@
   Verified the check genuinely discriminates (not another `map?`-style
   placeholder): confirmed it rejects a negative radius, a NaN colour
   channel, and an out-of-range colour value, and accepts valid data.
-  `bb test` 45/45 (was 43/43).
+  `kbb -M:test` 45/45 (was 43/43).
 - **Added `op-protagonist-brainrot`** (30th preset): `palette/brainrot` —
   the "最近流行りのブレインロット" aside from the original request — has
   been implemented and even bug-fixed (a real saturation-direction issue,
@@ -141,9 +141,9 @@
   (network-isekai) for the regenerate+redeploy follow-up.
 
   Verified identical bb/nbb output across 30 random seeds up to ±10^12
-  after the fix, plus all 12 real preset seeds. `bb test` 43/43 (was
+  after the fix, plus all 12 real preset seeds. `kbb -M:test` 43/43 (was
   42/42) — added a hardcoded cross-platform lock-in test (can't invoke
-  real cljs from `bb test` itself, so it pins the values both platforms
+  real cljs from `kbb -M:test` itself, so it pins the values both platforms
   already agreed on by hand).
 - **Fixed the starter-party formation touching itself**: `compose-party`'s
   4-slot formation only ever verified offsets were *distinct*, not that
@@ -156,7 +156,7 @@
   party's real footprints so every pairwise gap clears with margin.
   Replaced the weak "distinct offset" check with one that computes real
   clearance from actual primitive extents — confirmed it catches the
-  original bug by reverting the fix and watching it fail. `bb test` 42/42
+  original bug by reverting the fix and watching it fail. `kbb -M:test` 42/42
   (was 41/41).
 - **Replaced another proxy-assertion placeholder**, same audit instinct
   that found last round's `brainrot` bug: "different seeds can jitter skin
@@ -171,7 +171,7 @@
   across N instances needs to pass N distinct non-zero seeds, which
   `kami.isekai.presets` already does), but undocumented and easy to trip
   over — now called out explicitly in `seeded-jitter`'s docstring and
-  locked in as a test. `bb test` 41/41 (was 40/40).
+  locked in as a test. `kbb -M:test` 41/41 (was 40/40).
 - **Fixed `brainrot` producing the wrong direction of saturation for pale
   colours**: it's supposed to be the loud/saturated remix, but boosted
   each RGB channel around a fixed 0.5 midpoint — for a colour whose
@@ -183,11 +183,11 @@
   saturation per race instead of asserting inequality. Fixed by boosting
   each channel around the colour's OWN mean brightness instead of a fixed
   midpoint — verified numerically saturated for all 10 races now, not
-  just the mid-tone ones that happened to already work. `bb test` 40/40
+  just the mid-tone ones that happened to already work. `kbb -M:test` 40/40
   (was 39/39), replacing the weak `not=` assertion with a real saturation
   comparison.
 - **Fixed real drift, found via a documentation audit**: the README's
-  `bb gen-presets` usage looked accurate, but `scripts/gen_presets.cljk`'s
+  `kbb -M:gen-presets` usage looked accurate, but `scripts/gen_presets.cljk`'s
   own hardcoded preset list was still the v1 set — missing everything
   added across a dozen rounds since (priest, kobold/troll races, ghost/
   wolf/elemental-slimes/wyvern/skeleton, castle/guild-hall/summoning-circle,
@@ -197,8 +197,8 @@
   fell behind. Root cause wasn't "forgot to update it" so much as "two
   independent copies of the same list is structurally guaranteed to
   drift" — fixed by extracting `kami.isekai.presets/presets` as the one
-  place the list lives, consumed directly by both `bb gen-presets` and
-  network-isekai's script (no more copies to fall out of sync). `bb test`
+  place the list lives, consumed directly by both `kbb -M:gen-presets` and
+  network-isekai's script (no more copies to fall out of sync). `kbb -M:test`
   39/39 (was 38/38).
 - **Motion variety**: the catalog had only ever used 2 of the engine's 4
   `:anim` kinds (`:pulse`/`:sway` — confirmed `:bob`/`:rot` are real via
@@ -208,15 +208,15 @@
   breathing" is definitionally wrong. `compose-summoning-circle`'s 8 rune
   ticks now share one `:rot`/`:pivot [0 0]` so the whole ring turns as a
   unit — a static magic circle read as a diagram, not a spell in progress.
-  Verified via headless capture (3-frame time-lapse, not just `bb test`) —
-  the rune ring visibly rotates. `bb test` 38/38 (was 35/35), including a
+  Verified via headless capture (3-frame time-lapse, not just `kbb -M:test`) —
+  the rune ring visibly rotates. `kbb -M:test` 38/38 (was 35/35), including a
   check that the catalog now covers all 4 anim kinds.
 - **Closed the loop on the drift-detection audit** (3rd consecutive round
   checking for this bug class): `kami.isekai.catalog`'s `monster-ids`/
   `structure-ids` are hand-maintained sets mirroring the actual
   `compose-*` functions in `monsters`/`structures`/`tensei` — the same
   drift shape that bit `status.cljc` twice. Added a JVM-reflection test
-  (`ns-publics`, `bb test` runs on the JVM even though the library itself
+  (`ns-publics`, `kbb -M:test` runs on the JVM even though the library itself
   stays `.cljc`-portable) that compares `catalog/monster-ids` and
   `structure-ids` against the actual defined functions. Unlike the last 2
   rounds, this one found *no* existing drift — both sets were already

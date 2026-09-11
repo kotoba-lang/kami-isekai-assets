@@ -297,7 +297,7 @@
 ;; derived — .cljc portability rules out relying on ns-publics reflection
 ;; at the library's own runtime), which is exactly the drift shape that bit
 ;; status.cljc twice already. This test closes the loop with JVM-only
-;; reflection at *test* time (bb runs on the JVM even though the library
+;; reflection at *test* time (kbb -M:runs on the JVM even though the library
 ;; itself must stay CLJS-portable) — if a future round adds compose-troll2
 ;; and forgets to update catalog.cljc, this fails instead of silently
 ;; leaving the catalog stale.

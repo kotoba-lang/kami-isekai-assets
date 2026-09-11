@@ -3,7 +3,7 @@
    race/class/monster/structure/tensei catalog, not every combination (80
    race×class pairs is a browsing catalog, not a starter pack). This is the
    ONE place the list is defined: scripts/gen_presets.cljk (this repo's own
-   `bb gen-presets`) and network-isekai's scripts/gen_isekai_assets.clj
+   `kbb -M:gen-presets`) and network-isekai's scripts/gen_isekai_assets.clj
    (its Asset Hub deploy step) both consume `presets` directly instead of
    each maintaining their own copy.
 
