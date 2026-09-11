@@ -15,7 +15,7 @@
    :priest landed in races/classes without a matching stats entry here, so
    they silently computed as unmodified base stats). Two separate fixes:
    compute-stats now throws on a race/class id kami.isekai.catalog doesn't
-   know at all (a typo); test/chargen_test.cljc separately asserts
+   know at all (a typo); test/chargen_test.cljk separately asserts
    race-modifiers/class-modifiers have an entry for every catalog id (a
    completeness check — the drift bug was a *known* race missing an entry,
    which id-validation alone can't catch)."

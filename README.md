@@ -152,9 +152,9 @@ tensei/transition                              ; {:audio {...} :fx {...}} — th
 > **`gen-presets` is currently unavailable as a task.** It was
 > `bb gen-presets --out <dir>`; babashka was retired as this workspace's script
 > host by ADR-2607173000 and the conversion could not express its
-> `(load-file "scripts/gen_presets.clj")` body, so it was dropped
+> `(load-file "scripts/gen_presets.cljk")` body, so it was dropped
 > (ADR-2608131600). The recovered form is in `scripts/tasks-complex.edn` and the
-> script itself is still at `scripts/gen_presets.clj`; restoring it is a port,
+> script itself is still at `scripts/gen_presets.cljk`; restoring it is a port,
 > not a conversion.
 
 ## Render adapter (`kami.isekai.render-adapter`)
@@ -177,7 +177,7 @@ composed map.
 ;; => {:sky {...} :quads [...]}  — pack-instances that straight into a WebGL2/WebGPU draw call
 ```
 
-`nbb scripts/run-task.cljs render-test` proves this actually draws real pixels: a real headless-Chromium/WebGL2 canvas
+`nbb scripts/run-task.cljk render-test` proves this actually draws real pixels: a real headless-Chromium/WebGL2 canvas
 render of `monsters/compose-slime` through this adapter + `kami.scene2d`/`kami.sprite-gpu`,
 `readPixels`-verified (the slime's green body fill + its two dark eye dots are both checked for
 on screen, not just "compiles"). Needs a sibling `kotoba-lang/webgpu` checkout (+ its own sibling
@@ -188,8 +188,8 @@ read via cwd-relative paths in that repo).
 ## Develop
 
 ```bash
-nbb scripts/run-task.cljs test           # data gate: every race × class × monster × skill composes to valid data
-nbb scripts/run-task.cljs render-test    # pixel-verified GPU render proof (see caveat below)
+nbb scripts/run-task.cljk test           # data gate: every race × class × monster × skill composes to valid data
+nbb scripts/run-task.cljk render-test    # pixel-verified GPU render proof (see caveat below)
 ```
 
 Two caveats, both a consequence of babashka's retirement (ADR-2607173000):

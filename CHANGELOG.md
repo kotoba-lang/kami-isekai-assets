@@ -34,7 +34,7 @@
   `kami.isekai.party/compose-party` produces) existed since day one but had never actually been
   rendered, only shape/unit-checked. Rendering `party/starter-party`'s real 4 members
   (protagonist/knight/mage/rogue) through `presets->scene` → `kami.scene2d/frame-quads` found a
-  real, on-screen overlap `test/chargen_test.cljc`'s existing "formation clearance" check missed
+  real, on-screen overlap `test/chargen_test.cljk`'s existing "formation clearance" check missed
   entirely: that check computed each member's "footprint" from `:dx` + radius only, silently
   ignoring `:dy` — so `kami.isekai.chargen`'s mage `:cloak` accessory (which hangs DOWN via `:dy`,
   not sideways via `:dx`) was invisible to it, and the cheat-flagged protagonist's aura visibly
@@ -44,7 +44,7 @@
   correctly flags the old starter-party formation as 54.5 world-units short on that pair — and
   rescaled `kami.isekai.party`'s 4-slot formation ~1.25x to restore real clearance on every pair
   (verified both by the corrected math via `bb test`, and by re-rendering the real party:
-  `test/render_pixel_test.clj`'s new `starter-party-renders-real-pixels` samples each of the 4
+  `test/render_pixel_test.cljk`'s new `starter-party-renders-real-pixels` samples each of the 4
   members' own distinctive on-screen feature — the protagonist's cheat-aura, the mage's staff
   orb, the knight's shield, the rogue's dagger blade — at the exact screen position its own
   formation `:offset` predicts, plus confirms the canvas centre stays background (the 4 aren't
@@ -187,7 +187,7 @@
   (was 39/39), replacing the weak `not=` assertion with a real saturation
   comparison.
 - **Fixed real drift, found via a documentation audit**: the README's
-  `bb gen-presets` usage looked accurate, but `scripts/gen_presets.clj`'s
+  `bb gen-presets` usage looked accurate, but `scripts/gen_presets.cljk`'s
   own hardcoded preset list was still the v1 set — missing everything
   added across a dozen rounds since (priest, kobold/troll races, ghost/
   wolf/elemental-slimes/wyvern/skeleton, castle/guild-hall/summoning-circle,

@@ -19,7 +19,7 @@ jobs:
       - name: Install nbb
         run: npm install -g nbb
       - name: nbb test — every race/class/monster/skill composes to valid sprite2d data
-        run: nbb scripts/run-task.cljs test
+        run: nbb scripts/run-task.cljk test
       - name: Install Clojure CLI (clj-kondo lint only)
         uses: DeLaGuardo/setup-clojure@13.0
         with: { cli: 'latest' }
@@ -90,7 +90,7 @@ jobs:
         with: { bb: 'latest' }
       - uses: actions/setup-node@v4
         with: { node-version: '22' }
-      - name: Install nbb (drives scripts/run-task.cljs, which then shells to bb for this task)
+      - name: Install nbb (drives scripts/run-task.cljk, which then shells to bb for this task)
         run: npm install -g nbb
       - name: npm ci (webgpu checkout — playwright devDependency, committed package.json/package-lock.json)
         working-directory: webgpu
@@ -102,4 +102,4 @@ jobs:
         working-directory: kami-isekai-assets
         env:
           NODE_PATH: ${{ github.workspace }}/webgpu/node_modules
-        run: nbb scripts/run-task.cljs render-test
+        run: nbb scripts/run-task.cljk render-test

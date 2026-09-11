@@ -2,7 +2,7 @@
   "The single curated preset list — a representative slice across the
    race/class/monster/structure/tensei catalog, not every combination (80
    race×class pairs is a browsing catalog, not a starter pack). This is the
-   ONE place the list is defined: scripts/gen_presets.clj (this repo's own
+   ONE place the list is defined: scripts/gen_presets.cljk (this repo's own
    `bb gen-presets`) and network-isekai's scripts/gen_isekai_assets.clj
    (its Asset Hub deploy step) both consume `presets` directly instead of
    each maintaining their own copy.
@@ -10,7 +10,7 @@
    That duplication already happened once — network-isekai's copy grew a
    new entry every round this list changed, but this namespace didn't
    exist yet, so this file's predecessor (a list hardcoded directly in
-   scripts/gen_presets.clj) silently fell behind for a dozen rounds until
+   scripts/gen_presets.cljk) silently fell behind for a dozen rounds until
    this refactor. A single requireable def is the actual fix, not just
    remembering better next time."
   (:require [kami.isekai.chargen :as chargen]
